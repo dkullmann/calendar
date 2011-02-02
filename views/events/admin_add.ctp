@@ -1,21 +1,14 @@
 <div class="events form">
 <?php echo $this->Form->create('Event', array('url' => array('action' => 'add', $calendarId)));?>
 	<fieldset>
- 		<legend><?php __('Add Event');?></legend>
+ 		<legend><?php __('Admin Add Event');?></legend>
 	<?php
-		echo $this->Form->input('calendar_id', array('type' => 'hidden', 'value' => $calendarId));
 		echo $this->Form->input('title');
 		echo $this->Form->input('start_date');
 		echo $this->Form->input('end_date');
-		echo $this->TimeZone->select('time_zone');
+		echo $this->Form->input('recurring');
+		echo $this->Form->input('time_zone');
 		echo $this->Form->input('summary');
-	?>
-	</fieldset>
-	<fieldset>
- 		<legend><?php __('Add Recurrence Rule'); ?></legend>
-	<?php
-		echo $this->Calendar->dayCheckboxes('RecurrenceRule.0.bydaydays');
-		echo $this->Calendar->frequencySelect('RecurrenceRule.0.frequency');
 	?>
 	</fieldset>
 <?php echo $this->Form->end('Submit');?>

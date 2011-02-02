@@ -1,12 +1,14 @@
 <?php
-class EventsController extends CalendarAppController {
+App::import('Lib', 'Calendar.CalendarDate');
 
+class EventsController extends CalendarAppController {
 /**
- * Name
+ * Controller name
  *
  * @var string
+ * @access public
  */
-	var $name = 'Events';
+	public $name = 'Events';
 
 /**
  * Helpers
@@ -22,95 +24,233 @@ class EventsController extends CalendarAppController {
  */
 	public $components = array('RequestHandler');
 
-	function index() {
+/**
+ * Index for event.
+ *
+ * @param string $calendarId, Calendar id 
+ * @access public
+ */
+	public function index($calendarId = null) {
+		if ($calendarId) {
+			$this->paginate['conditions']['calendar_id'] = $calendarId;
+		}
 
-		$conditions = array();
-	
-		if(isset($this->data)) {			
-			$this->data['Event']['start_date'] = $this->Event->deconstruct('start_date', $this->data['Event']['start_date']);
-			$this->data['Event']['end_date']   = $this->Event->deconstruct('end_date', $this->data['Event']['end_date']);	
+		if (!empty($this->params['url']['start'])) {
+			$this->paginate['conditions']['start_date'] = CalendarDate::unixToDate($this->params['url']['start']);
 		}
-		
-		if(!isset($this->data['Event']['time_zone'])) {
-			$time_zone = 'UTC';
-		} else {
-			$time_zone = $this->data['Event']['time_zone'];
+
+		if (!empty($this->params['url']['end'])) {
+			$this->paginate['conditions']['end_date'] = CalendarDate::unixToDate($this->params['url']['end']);
 		}
-		
-		if($this->RequestHandler->isAjax()) {
-			$this->data['Event']['start_date'] = $this->Event->unixToDate($this->params['url']['start']);	
-			$this->data['Event']['end_date']   = $this->Event->unixToDate($this->params['url']['end']);
-			$this->set('browser_offset', $this->params['url']['browserOffset']);
+
+		if (!empty($this->params['url']['browserOffset'])) {
+			$this->set('browserOffset', $this->params['url']['browserOffset']);	
 		}
+		$this->paginate['contain'][] = 'RecurrenceRule';
+		$this->set('events', $this->paginate());
+		$this->set(compact('calendarId')); 
+	}
+
+/**
+ * View for event.
+ *
+ * @param string $id, event id 
+ * @access public
+ */
+	public function view($id = null) {
+		try {
+			$event = $this->Event->view($id);
+			$calendarId = $event['Event']['calendar_id'];
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
 		
-		if(isset($this->data)) {
-			$conditions = array(
-				'start_date' => $this->data['Event']['start_date'],
-				'end_date'   => $this->data['Event']['end_date'],
-			);
-			
-			if(!empty($this->params['pass'])) {
-				$conditions['calendar_id'] = $this->params['pass'];
+			$this->redirect('/');
+		}
+		$this->set(compact('event'));
+		$this->set(compact('calendarId')); 
+	}
+
+/**
+ * Add for event.
+ *
+ * @param string $calendarId, Calendar id 
+ * @access public
+ */
+	public function add($calendarId) {
+		try {
+			$result = $this->Event->add($calendarId, $this->data);
+			if ($result === true) {
+				$this->Session->setFlash(__('The event has been saved', true));
+				$this->redirect(array('action' => 'index', $calendarId));
 			}
-						
-			$this->paginate = array( 'conditions' => $conditions );
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
+		} catch (Exception $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect(array('action' => 'index', $calendarId));
+		}
+		$calendars = $this->Event->Calendar->find('list');
+		$this->set(compact('calendars'));
+		$this->set(compact('calendarId')); 
+	}
+
+/**
+ * Edit for event.
+ *
+ * @param string $id, event id 
+ * @access public
+ */
+	public function edit($id = null) {
+		try {
+			$result = $this->Event->edit($id, $this->data);
+			if ($result === true) {
+				$calendarId = $this->Event->data['Event']['calendar_id'];
+				$this->Session->setFlash(__('Event saved', true));
+				$this->redirect(array('action' => 'view', $this->Event->data['Event']['id']));
+			} else {
+				$this->data = $result;
+				$calendarId = $this->data['Event']['calendar_id'];
+			}
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect('/');
+		}
+		$calendars = $this->Event->Calendar->find('list');
+		$this->set(compact('calendars'));
+		$this->set(compact('calendarId')); 
+	}
+
+/**
+ * Delete for event.
+ *
+ * @param string $id, event id 
+ * @access public
+ */
+	public function delete($id = null) {
+		try {
+			$event = $this->Event->view($id);
+			$calendarId = $event['Event']['calendar_id'];			
+			$this->set(compact('calendarId')); 
+			$result = $this->Event->validateAndDelete($id, $this->data);
+			if ($result === true) {
+				$this->Session->setFlash(__('Event deleted', true));
+				$this->redirect(array('action' => 'index', $calendarId));
+			}
+		} catch (Exception $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect('/');
+		}
+		if (!empty($this->Event->data['event'])) {
+			$this->set('event', $this->Event->data['event']);
+		}
+	}
+
+/**
+ * Admin index for event.
+ *
+ * @param string $calendarId, Calendar id 
+ * @access public
+ */
+	public function admin_index($calendarId) {
+		$this->Event->recursive = 0;
+		if ($calendarId) {
+			$this->paginate['conditions']['calendar_id'] = $calendarId;
 		}
 		$this->set('events', $this->paginate());
+		$this->set(compact('calendarId'));
 	}
 
-	function view($id = null) {
-		if (!$id) {
-			$this->Session->setFlash(__('Invalid event', true));
-			$this->redirect(array('action' => 'index'));
+/**
+ * Admin view for event.
+ *
+ * @param string $id, event id 
+ * @access public
+ */
+	public function admin_view($id = null) {
+		try {
+			$event = $this->Event->view($id);
+			$calendarId = $event['Event']['calendar_id'];
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect('/');
 		}
-		$this->set('event', $this->Event->read(null, $id));
+		$this->set(compact('event'));
+		$this->set(compact('calendarId')); 
 	}
 
-	function add() {
-		if (!empty($this->data)) {
-			$this->Event->create();
-			if ($this->Event->saveAll($this->data)) {
+/**
+ * Admin add for event.
+ *
+ * @param string $calendarId, Calendar id 
+ * @access public
+ */
+	public function admin_add($calendarId) {
+		try {
+			$result = $this->Event->add($calendarId, $this->data);
+			if ($result === true) {
 				$this->Session->setFlash(__('The event has been saved', true));
-				$this->redirect(array('action' => 'index'));
-			} else {
-				$this->Session->setFlash(__('The event could not be saved. Please, try again.', true));
+				$this->redirect(array('action' => 'index', $calendarId));
 			}
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
+		} catch (Exception $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect(array('action' => 'index', $calendarId));
 		}
 		$calendars = $this->Event->Calendar->find('list');
 		$this->set(compact('calendars'));
+		$this->set(compact('calendarId')); 
 	}
 
-	function edit($id = null) {
-		if (!$id && empty($this->data)) {
-			$this->Session->setFlash(__('Invalid event', true));
-			$this->redirect(array('action' => 'index'));
-		}
-		if (!empty($this->data)) {
-			if ($this->Event->save($this->data)) {
-				$this->Session->setFlash(__('The event has been saved', true));
-				$this->redirect(array('action' => 'index'));
+/**
+ * Admin edit for event.
+ *
+ * @param string $id, event id 
+ * @access public
+ */
+	public function admin_edit($id = null) {
+		try {
+			$result = $this->Event->edit($id, $this->data);
+			if ($result === true) {
+				$calendarId = $this->Event->data['Event']['calendar_id'];
+				$this->Session->setFlash(__('Event saved', true));
+				$this->redirect(array('action' => 'view', $this->Event->data['Event']['id']));
 			} else {
-				$this->Session->setFlash(__('The event could not be saved. Please, try again.', true));
+				$this->data = $result;
+				$calendarId = $this->data['Event']['calendar_id'];
 			}
-		}
-		if (empty($this->data)) {
-			$this->data = $this->Event->read(null, $id);
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect('/');
 		}
 		$calendars = $this->Event->Calendar->find('list');
 		$this->set(compact('calendars'));
+		$this->set(compact('calendarId')); 
 	}
 
-	function delete($id = null) {
-		if (!$id) {
-			$this->Session->setFlash(__('Invalid id for event', true));
-			$this->redirect(array('action'=>'index'));
+/**
+ * Admin delete for event.
+ *
+ * @param string $id, event id 
+ * @access public
+ */
+	public function admin_delete($id = null) {
+		try {
+			$event = $this->Event->view($id);
+			$calendarId = $event['Event']['calendar_id'];			
+			$this->set(compact('calendarId')); 
+			$result = $this->Event->validateAndDelete($id, $this->data);
+			if ($result === true) {
+				$this->Session->setFlash(__('Event deleted', true));
+				$this->redirect(array('action' => 'index', $calendarId));
+			}
+		} catch (Exception $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect('/');
 		}
-		if ($this->Event->delete($id)) {
-			$this->Session->setFlash(__('Event deleted', true));
-			$this->redirect(array('action'=>'index'));
+		if (!empty($this->Event->data['event'])) {
+			$this->set('event', $this->Event->data['event']);
 		}
-		$this->Session->setFlash(__('Event was not deleted', true));
-		$this->redirect(array('action' => 'index'));
 	}
+
 }
-?>

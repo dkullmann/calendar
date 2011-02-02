@@ -5,7 +5,7 @@
 	<?php
 		echo $this->Form->input('id');
 		echo $this->Form->input('calendar_id');
-		echo $this->Form->input('description');
+		echo $this->Form->input('title');
 		echo $this->Form->input('start_date');
 		echo $this->Form->input('end_date');
 		echo $this->TimeZone->select('time_zone');

@@ -1,29 +1,3 @@
-<?php
-
-	$this->Html->script(array(
-			'/calendar/js/datepicker/date.js',
-			'/calendar/js/datepicker/jquery.datePicker.js',
-			'/calendar/js/datepicker/cake.datePicker.js',
-		),
-		array('inline' => false)
-	);
-	
-	$this->Html->css('/calendar/css/datepicker/datePicker.css', 'stylesheet', array('inline' => false));
-?>
-<div class="events form">
-<?php echo $this->Form->create('Event');?>
-	<fieldset>
- 		<legend><?php __('Find Events'); ?></legend>
-	<?php
-
-		echo $this->DatePicker->picker('start_date');
-		echo $this->DatePicker->picker('end_date');
-		echo $this->TimeZone->select('time_zone');
-	?>
-	</fieldset>
-<?php echo $this->Form->end(__('Submit', true));?>
-</div>
-
 <div class="events index">
 <h2><?php __('Events');?></h2>
 <p>
@@ -99,7 +73,9 @@ foreach ($events as $event):
 <div class="actions">
 	<ul>
 		<li><?php echo $this->Html->link(__('New Event', true), array('action' => 'add', $calendarId)); ?></li>
-		<li><?php echo $this->Html->link(__('List Calendars', true), array('controller' => 'calendars', 'action' => 'index')); ?> </li>
-		<li><?php echo $this->Html->link(__('New Calendar', true), array('controller' => 'calendars', 'action' => 'add')); ?> </li>
+		<li><?php echo $this->Html->link(__('List Calendar.calendars', true), array('controller' => 'calendar.calendars', 'action' => 'index')); ?> </li>
+		<li><?php echo $this->Html->link(__('New Calendar', true), array('controller' => 'calendar.calendars', 'action' => 'add')); ?> </li>
+		<li><?php echo $this->Html->link(__('List Calendar.recurrence Rules', true), array('controller' => 'calendar.recurrence_rules', 'action' => 'index')); ?> </li>
+		<li><?php echo $this->Html->link(__('New Recurrence Rule', true), array('controller' => 'calendar.recurrence_rules', 'action' => 'add')); ?> </li>
 	</ul>
 </div>

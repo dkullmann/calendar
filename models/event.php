@@ -1,73 +1,48 @@
 <?php
 class Event extends CalendarAppModel {
-
 /**
  * Name
  *
- * @var string
+ * @var string $name
+ * @access public
  */
-	var $name = 'Event';
+	public $name = 'Event';
 
 /**
- * Additional Find types to be used with find($type);
+ * Validation parameters - initialized in constructor
  *
  * @var array
+ * @access public
  */
-	public $_findMethods = array('recurring' => true);
+	public $validate = array();
 
 /**
- * recurrenceStart and recurrenceEnd - the start and end
- * dates to use in calculating recurring events
+ * belongsTo association
  *
- * @var string
- * @see Event::beforeFind() and Event::afterFind()
+ * @var array $belongsTo 
+ * @access public
  */
-	public $_recurrenceStart = null;
-	public $_recurrenceEnd = null;
-
-/**
- * Validation rules
- *
- * @var array
- */
-	var $validate = array(
-		'calendar_id' => array(
-			'numeric' => array(
-				'rule' => array('numeric'),
-				//'message' => 'Your custom message here',
-				//'allowEmpty' => false,
-				//'required' => false,
-				//'last' => false, // Stop validation after this rule
-				//'on' => 'create', // Limit validation to 'create' or 'update' operations
-			),
-		),
-	);
-	
-/**
- * belongsTo associations
- *
- * @var array
- */
-	var $belongsTo = array(
+	public $belongsTo = array(
 		'Calendar' => array(
-			'className' => 'Calendar',
+			'className' => 'Calendar.Calendar',
 			'foreignKey' => 'calendar_id',
 			'conditions' => '',
 			'fields' => '',
 			'order' => ''
 		)
 	);
-	
 /**
- * hasMany associations
+ * hasMany association
  *
- * @var array
+ * @var array $hasMany
+ * @access public
  */
-	var $hasMany = array(
+
+	public $hasMany = array(
 		'RecurrenceRule' => array(
 			'className' => 'Calendar.RecurrenceRule',
 			'foreignKey' => 'event_id',
-			'dependent' => false,
+			'dependent' => true,
 			'conditions' => '',
 			'fields' => '',
 			'order' => '',
@@ -78,90 +53,143 @@ class Event extends CalendarAppModel {
 			'counterQuery' => ''
 		)
 	);
-	
+
+
 /**
- * Common format for dates
+ * Constructor
  *
- * @var string
+ * @param mixed $id Model ID
+ * @param string $table Table name
+ * @param string $ds Datasource
+ * @access public
  */
-	public $date_format = 'Y-m-d H:i:s';
-	
-/**
- * DateTimeZone object in UTC 
- *
- * @var array
- * @see Event::__construct()
- */
-	public $utc_tz;
-	
 	public function __construct($id = false, $table = null, $ds = null) {
 		parent::__construct($id, $table, $ds);
+		$this->validate = array(
+			'calendar_id' => array(
+				'notempty' => array('rule' => array('notempty'), 'required' => true, 'allowEmpty' => false, 'message' => __('Please enter a Calendar', true))),
+			'title' => array(
+				'notempty' => array('rule' => array('notempty'), 'required' => true, 'allowEmpty' => false, 'message' => __('Please enter a Title', true))),
+			'time_zone' => array(
+				'notempty' => array('rule' => array('notempty'), 'required' => true, 'allowEmpty' => false, 'message' => __('Please enter a Time Zone', true))),
+		);
 		$this->utc_tz = new DateTimeZone('UTC');
-		$this->_findMethods['recurring'] = true;
 	}
 
 /**
- * Converts a string or DateTime object from a UTC to a local time zone. Returns a string or
- * DateTime object depending on what was passed in.
+ * Adds a new record to the database
  *
- * @param string or DateTime $date A date string or DateTime object in UTC time.
- * @param string or DateTimeZone $time_zone A string or DateTimeZone object to change to.
- * @param string $return_format A DateTime format to use to return a string date
- * @return string or DateTime object A string representing the time in the local time zone, or a DateTime object
+ * @param string $calendarId, Calendar id
+ * @param array post data, should be Contoller->data
+ * @return array
  * @access public
- */	
-	public function utcToTimezone($date, $time_zone, $return_format = 'Y-m-d H:i:s') {
-			
-		if(!is_a($time_zone, 'DateTimeZone')) {
-			$time_zone = new DateTimeZone($time_zone);
+ */
+	public function add($calendarId = null, $data = null) {
+		if (!empty($data)) {
+			$data['Event']['calendar_id'] = $calendarId;
+			$this->create();
+			$result = $this->saveAll($data);
+			if ($result !== false) {
+				return true;
+			} else {
+				throw new OutOfBoundsException(__('Could not save the event, please check your inputs.', true));
+			}
+			return $return;
 		}
-	
-		if(!is_a($date, 'DateTime')) {
-			$date = new DateTime($date, $this->utc_tz);
-			$date->setTimezone($time_zone);
-			return $date->format($return_format);
-		}
-		
-		return $date->setTimezone($time_zone);
 	}
 
 /**
- * Converts a string or DateTime object from a local time zone to UTC. Returns a string or
- * DateTime object depending on what was passed in.
+ * Edits an existing Event.
  *
- * @param string or DateTime $date A date string or DateTime object in a local time zone.
- * @param string or DateTimeZone $time_zone A string or DateTimeZone object to change to.
- * @param string $return_format A DateTime format to use to return a string date
- * @return string or DateTime object A string representing the time in UTC or a DateTime object
+ * @param string $id, event id 
+ * @param array $data, controller post data usually $this->data
+ * @return mixed True on successfully save else post data as array
+ * @throws OutOfBoundsException If the element does not exists
  * @access public
- */	
-	public function timezoneToUtc($date, $time_zone, $return_format = 'Y-m-d H:i:s') {
-			
-		if(!is_a($time_zone, 'DateTimeZone')) {
-			$time_zone = new DateTimeZone($time_zone);
+ */
+	public function edit($id = null, $data = null) {
+		$event = $this->find('first', array(
+			'conditions' => array(
+				"{$this->alias}.{$this->primaryKey}" => $id,
+				)));
+
+		if (empty($event)) {
+			throw new OutOfBoundsException(__('Invalid Event', true));
 		}
-	
-		if(!is_a($date, 'DateTime')) {
-			$date = new DateTime($date, $time_zone);
-			$date->setTimezone($this->utc_tz);
-			return $date->format($return_format);
+		$this->set($event);
+
+		if (!empty($data)) {
+			$this->set($data);
+			$result = $this->save(null, true);
+			if ($result) {
+				$this->data = $result;
+				return true;
+			} else {
+				return $data;
+			}
+		} else {
+			return $event;
 		}
-		
-		return $date->setTimezone($time_zone);
 	}
 
 /**
- * Converts a unix timestamp into a SQL date..
+ * Returns the record of a Event.
  *
- * @param string Unix timestamp.
- * @return string Time formatted as $this->date_format
+ * @param string $id, event id.
+ * @return array
+ * @throws OutOfBoundsException If the element does not exists
  * @access public
- */		
-	public function unixToDate($unixtime = null) {
-		$date = new DateTime('@'.$unixtime);
-		return $date->format($this->date_format);
+ */
+	public function view($id = null) {
+		$event = $this->find('first', array(
+			'conditions' => array(
+				"{$this->alias}.{$this->primaryKey}" => $id)));
+
+		if (empty($event)) {
+			throw new OutOfBoundsException(__('Invalid Event', true));
+		}
+
+		return $event;
 	}
-	
+
+/**
+ * Validates the deletion
+ *
+ * @param string $id, event id 
+ * @param array $data, controller post data usually $this->data
+ * @return boolean True on success
+ * @throws OutOfBoundsException If the element does not exists
+ * @access public
+ */
+	public function validateAndDelete($id = null, $data = array()) {
+		$event = $this->find('first', array(
+			'conditions' => array(
+				"{$this->alias}.{$this->primaryKey}" => $id,
+				)));
+
+		if (empty($event)) {
+			throw new OutOfBoundsException(__('Invalid Event', true));
+		}
+
+		$this->data['event'] = $event;
+		if (!empty($data)) {
+			$data['Event']['id'] = $id;
+			$tmp = $this->validate;
+			$this->validate = array(
+				'id' => array('rule' => 'notEmpty'),
+				'confirm' => array('rule' => '[1]'));
+
+			$this->set($data);
+			if ($this->validates()) {
+				if ($this->delete($data['Event']['id'])) {
+					return true;
+				}
+			}
+			$this->validate = $tmp;
+			throw new Exception(__('You need to confirm to delete this Event', true));
+		}
+	}
+
 /**
  * Renders a recurring event for the given date. Does not check to make sure the
  * event occurs on this date (use RecurrenceRule::ruleIsTrue for that).
@@ -172,30 +200,31 @@ class Event extends CalendarAppModel {
  * @access public
  */
 	public function renderEventForDate($event, $date) {
-	
+
 		$rendered_event = $event;
-		
+
 		$user_tz = new DateTimeZone($event[$this->alias]['time_zone']);
-		
-		$start_date = new DateTime($event[$this->alias]['start_date'], $this->utc_tz);
-		$end_date   = new DateTime($event[$this->alias]['end_date'], $this->utc_tz);
-		
+
+		$start_date = new CalendarDate($event[$this->alias]['start_date']);
+		$end_date   = new CalendarDate($event[$this->alias]['end_date']);
+
 		$interval = $start_date->diff($end_date);
-						
+		$interval = new DateInterval("PT{$interval->h}H{$interval->i}M");
+
 		$start_date->setTimezone($user_tz);
-		
+
 		$floating_start_hour = $start_date->format('H');
-		
+
 		$date->setTimezone($user_tz);
 		$date->setTime($floating_start_hour, $date->format('i'), $date->format('s'));
 		$date->setTimezone($this->utc_tz);
-		$event[$this->alias]['start_date'] = $date->format($this->date_format);
-		
+		$event[$this->alias]['start_date'] = $date->format();
+
 		$date->add($interval);
-		$event[$this->alias]['end_date']   = $date->format($this->date_format);
-		
+		$event[$this->alias]['end_date'] = $date->format();
+
 		return $event;
-		
+
 	}
 
 /**
@@ -209,82 +238,14 @@ class Event extends CalendarAppModel {
 	public function beforeSave($options = array()) {
 
 		extract($this->data[$this->alias]);
-				
+
 		$user_tz = new DateTimeZone($time_zone);
 
-		$this->data[$this->alias]['start_date'] = $this->timezoneToUtc($start_date, $user_tz);
-		$this->data[$this->alias]['end_date']   = $this->timezoneToUtc($end_date, $user_tz);
-				
+		$this->data[$this->alias]['start_date'] = CalendarDate::convertToUTC($start_date, $user_tz);
+		$this->data[$this->alias]['end_date']   = CalendarDate::convertToUTC($end_date, $user_tz);
+
 		return true;
 
-	}
-	
-/**
- * Handles the before/after filter logic for find('recurring') operations.  Only called by Model::find().
- *
- * @param string $state Either "before" or "after"
- * @param array $query
- * @param array $data
- * @return array The records found exptrapolated to include recurrence
- * @access protected
- * @see Model::find()
- */
-	protected function _findRecurring($state, $query, $results = array()) {
-
-		/* $events = array(); */
-	
-		if ($state == 'before' ) {
-			return $query;
-			$start_date = $query['conditions']['start_date'];
-			$end_date   = $query['conditions']['end_date'];
-		
-			$query['page'] = 1;
-			$query['conditions'] = array(
-					"AND" => array(
-						"OR" => array (
-							"AND" => array (
-								"Event.end_date >" => $start_date,
-								"Event.start_date <" => $end_date,
-							),
-							"Event.recurring" => true,
-						),
-					)
-				);
-				
-			if (!empty($query['calendar_id'])) {
-				$query['conditions']['AND'][] = array( "Event.calendar_id" => $query['calendar_id'] );
-			}
-
-			return $query;
-
-		} elseif ($state == 'after') {
-
-			/* Moved to afterFind()	so it would affect all queries */
-			/*		
-			foreach ($results as $event) {
-				if (count($event['RecurrenceRule']) >= 1) {
-				
-					$one_day = new DateInterval('P1D');
-					$end_day = new DateTime($query['end_date'], $this->utc_tz);
-					
-					for ($date = new DateTime($query['start_date'], $this->utc_tz); $date <= $end_day; $date->add($one_day)) {
-
-						foreach ($event['RecurrenceRule'] as $rule) {
-							if ($this->RecurrenceRule->ruleIsTrue($rule, $date)) {
-								$events[] = $this->renderEventForDate($event, $date);
-							}
-						}
-					}
-					
-				} else {
-					$events[] = $event;
-				}
-			}
-			*/
-		}
-
-		/* return $events; */
-		return $results;
 	}
 
 /**
@@ -295,14 +256,14 @@ class Event extends CalendarAppModel {
  * @return mixed $query Query data
  * @access public
  */
- 
+
  	/* TODO: We should make a $query parameter 'recurring' to use here */
 	public function beforeFind($query) {
-		
+
 		if(!empty($query['conditions']['start_date']) && !empty($query['conditions']['end_date'])) {
 			$this->_recurrenceStart = $query['conditions']['start_date'];
 			$this->_recurrenceEnd = $query['conditions']['end_date'];
-			
+
 			$query['conditions']['OR'] = array(
 					"AND" => array (
 						"Event.end_date >" => $query['conditions']['start_date'],
@@ -310,11 +271,11 @@ class Event extends CalendarAppModel {
 					),
 					"Event.recurring" => true,
 				);
-				
+
 			unset($query['conditions']['start_date']);
 			unset($query['conditions']['end_date']);
 		}
-		
+
 		return $query;
 	}
 
@@ -326,17 +287,17 @@ class Event extends CalendarAppModel {
  * @return array Modified results set
  * @access public
  */
- 
+
  	/* TODO: There may be more logic required if we are not the primary model. */
 	public function afterFind($results, $primary) {
-
+			$events = array();
 			foreach ($results as $event) {
 				if (isset($event['RecurrenceRule']) && count($event['RecurrenceRule']) >= 1) {
-				
+
 					$one_day = new DateInterval('P1D');
-					$end_day = new DateTime($this->_recurrenceEnd, $this->utc_tz);
-					
-					for ($date = new DateTime($this->_recurrenceStart, $this->utc_tz); $date <= $end_day; $date->add($one_day)) {
+					$end_day = new CalendarDate($this->_recurrenceEnd);
+
+					for ($date = new CalendarDate($this->_recurrenceStart); $date <= $end_day; $date->add($one_day)) {
 
 						foreach ($event['RecurrenceRule'] as $rule) {
 							if ($this->RecurrenceRule->ruleIsTrue($rule, $date)) {
@@ -344,14 +305,12 @@ class Event extends CalendarAppModel {
 							}
 						}
 					}
-					
+
 				} else {
 					$events[] = $event;
 				}
 			}
-			
+
 		return parent::afterFind($events, $primary);
 	}
-
 }
-?>

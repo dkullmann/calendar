@@ -49,7 +49,7 @@ class M4d49956028644ae7816327252944ebe5 extends CakeMigration {
 				'recurrence_rules' => array(
 					'id' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36, 'key' => 'primary'),
 					'event_id' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36, 'key' => 'index'),
-					'by_day_days' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 30),
+					'bydaydays' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 30),
 					'frequency' => array('type' => 'string', 'null' => true, 'default' => NULL),
 					'created' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
 					'modified' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
