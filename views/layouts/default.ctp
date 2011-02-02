@@ -27,11 +27,8 @@
 	</title>
 	<?php
 		echo $this->Html->meta('icon');
-
 		echo $this->Html->css('cake.generic');
-
-		echo $this->Html->script(array('jquery/jquery-1.4.4.min','jquery/jquery-ui-1.8.6.custom.min'));
-
+		echo $this->Html->script(array('/calendar/js/jquery/jquery-1.4.4','/calendar/js/jquery/jquery-ui-1.8.9'));
 		echo $scripts_for_layout;
 	?>
 </head>
@@ -56,6 +53,8 @@
 			?>
 		</div>
 	</div>
-	<?php echo $this->Js->writeBuffer(); ?>
+	<?php
+		echo $this->Js->writeBuffer();
+	?>
 </body>
 </html>

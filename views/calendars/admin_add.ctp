@@ -1,9 +1,8 @@
 <div class="calendars form">
-<?php echo $this->Form->create('Calendar', array('url' => array('action' => 'edit')));?>
+<?php echo $this->Form->create('Calendar', array('url' => array('action' => 'add')));?>
 	<fieldset>
- 		<legend><?php __('Edit Calendar');?></legend>
+ 		<legend><?php __('Admin Add Calendar');?></legend>
 	<?php
-		echo $this->Form->input('id');
 		echo $this->Form->input('user_id');
 		echo $this->Form->input('title');
 		echo $this->Form->input('notes');
@@ -13,7 +12,6 @@
 </div>
 <div class="actions">
 	<ul>
-		<li><?php echo $this->Html->link(__('Delete', true), array('action' => 'delete', $this->Form->value('Calendar.id'))); ?></li>
 		<li><?php echo $this->Html->link(__('List Calendars', true), array('action' => 'index'));?></li>
 		<li><?php echo $this->Html->link(__('List Users', true), array('controller' => 'users', 'action' => 'index')); ?> </li>
 		<li><?php echo $this->Html->link(__('New User', true), array('controller' => 'users', 'action' => 'add')); ?> </li>

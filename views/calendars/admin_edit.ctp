@@ -1,7 +1,7 @@
 <div class="calendars form">
 <?php echo $this->Form->create('Calendar', array('url' => array('action' => 'edit')));?>
 	<fieldset>
- 		<legend><?php __('Edit Calendar');?></legend>
+ 		<legend><?php __('Admin Edit Calendar');?></legend>
 	<?php
 		echo $this->Form->input('id');
 		echo $this->Form->input('user_id');

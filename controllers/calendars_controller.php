@@ -1,67 +1,212 @@
 <?php
 class CalendarsController extends CalendarAppController {
-
 /**
- * Name
+ * Controller name
  *
  * @var string
+ * @access public
  */
-	var $name = 'Calendars';
+	public $name = 'Calendars';
 
-	function index() {
+/**
+ * Helpers
+ *
+ * @var array
+ * @access public
+ */
+	public $helpers = array('Html', 'Form');
+
+/**
+ * Index for calendar.
+ * 
+ * @access public
+ */
+	public function index() {
 		$this->Calendar->recursive = 0;
-		$this->set('calendars', $this->paginate());
+		$this->set('calendars', $this->paginate()); 
 	}
 
-	function view($id = null) {
-		if (!$id) {
-			$this->Session->setFlash(__('Invalid calendar', true));
+/**
+ * View for calendar.
+ *
+ * @param string $id, calendar id 
+ * @access public
+ */
+	public function view($id = null) {
+		try {
+			$calendar = $this->Calendar->view($id);
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
 			$this->redirect(array('action' => 'index'));
 		}
-		$this->set('calendar', $this->Calendar->read(null, $id));
+		$this->set(compact('calendar')); 
 	}
 
-	function add() {
-		if (!empty($this->data)) {
-			$this->Calendar->create();
-			if ($this->Calendar->save($this->data)) {
+/**
+ * Add for calendar.
+ * 
+ * @access public
+ */
+	public function add() {
+		try {
+			$result = $this->Calendar->add($this->data);
+			if ($result === true) {
 				$this->Session->setFlash(__('The calendar has been saved', true));
 				$this->redirect(array('action' => 'index'));
-			} else {
-				$this->Session->setFlash(__('The calendar could not be saved. Please, try again.', true));
 			}
-		}
-	}
-
-	function edit($id = null) {
-		if (!$id && empty($this->data)) {
-			$this->Session->setFlash(__('Invalid calendar', true));
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
+		} catch (Exception $e) {
+			$this->Session->setFlash($e->getMessage());
 			$this->redirect(array('action' => 'index'));
 		}
-		if (!empty($this->data)) {
-			if ($this->Calendar->save($this->data)) {
-				$this->Session->setFlash(__('The calendar has been saved', true));
-				$this->redirect(array('action' => 'index'));
+		$users = $this->Calendar->User->find('list');
+		$this->set(compact('users'));
+ 
+	}
+
+/**
+ * Edit for calendar.
+ *
+ * @param string $id, calendar id 
+ * @access public
+ */
+	public function edit($id = null) {
+		try {
+			$result = $this->Calendar->edit($id, $this->data);
+			if ($result === true) {
+				$this->Session->setFlash(__('Calendar saved', true));
+				$this->redirect(array('action' => 'view', $this->Calendar->data['Calendar']['id']));
+				
 			} else {
-				$this->Session->setFlash(__('The calendar could not be saved. Please, try again.', true));
+				$this->data = $result;
 			}
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect('/');
 		}
-		if (empty($this->data)) {
-			$this->data = $this->Calendar->read(null, $id);
+		$users = $this->Calendar->User->find('list');
+		$this->set(compact('users'));
+ 
+	}
+
+/**
+ * Delete for calendar.
+ *
+ * @param string $id, calendar id 
+ * @access public
+ */
+	public function delete($id = null) {
+		try {
+			$result = $this->Calendar->validateAndDelete($id, $this->data);
+			if ($result === true) {
+				$this->Session->setFlash(__('Calendar deleted', true));
+				$this->redirect(array('action' => 'index'));
+			}
+		} catch (Exception $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect(array('action' => 'index'));
+		}
+		if (!empty($this->Calendar->data['calendar'])) {
+			$this->set('calendar', $this->Calendar->data['calendar']);
 		}
 	}
 
-	function delete($id = null) {
-		if (!$id) {
-			$this->Session->setFlash(__('Invalid id for calendar', true));
-			$this->redirect(array('action'=>'index'));
-		}
-		if ($this->Calendar->delete($id)) {
-			$this->Session->setFlash(__('Calendar deleted', true));
-			$this->redirect(array('action'=>'index'));
-		}
-		$this->Session->setFlash(__('Calendar was not deleted', true));
-		$this->redirect(array('action' => 'index'));
+/**
+ * Admin index for calendar.
+ * 
+ * @access public
+ */
+	public function admin_index() {
+		$this->Calendar->recursive = 0;
+		$this->set('calendars', $this->paginate()); 
 	}
+
+/**
+ * Admin view for calendar.
+ *
+ * @param string $id, calendar id 
+ * @access public
+ */
+	public function admin_view($id = null) {
+		try {
+			$calendar = $this->Calendar->view($id);
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect(array('action' => 'index'));
+		}
+		$this->set(compact('calendar')); 
+	}
+
+/**
+ * Admin add for calendar.
+ * 
+ * @access public
+ */
+	public function admin_add() {
+		try {
+			$result = $this->Calendar->add($this->data);
+			if ($result === true) {
+				$this->Session->setFlash(__('The calendar has been saved', true));
+				$this->redirect(array('action' => 'index'));
+			}
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
+		} catch (Exception $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect(array('action' => 'index'));
+		}
+		$users = $this->Calendar->User->find('list');
+		$this->set(compact('users'));
+ 
+	}
+
+/**
+ * Admin edit for calendar.
+ *
+ * @param string $id, calendar id 
+ * @access public
+ */
+	public function admin_edit($id = null) {
+		try {
+			$result = $this->Calendar->edit($id, $this->data);
+			if ($result === true) {
+				$this->Session->setFlash(__('Calendar saved', true));
+				$this->redirect(array('action' => 'view', $this->Calendar->data['Calendar']['id']));
+				
+			} else {
+				$this->data = $result;
+			}
+		} catch (OutOfBoundsException $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect('/');
+		}
+		$users = $this->Calendar->User->find('list');
+		$this->set(compact('users'));
+ 
+	}
+
+/**
+ * Admin delete for calendar.
+ *
+ * @param string $id, calendar id 
+ * @access public
+ */
+	public function admin_delete($id = null) {
+		try {
+			$result = $this->Calendar->validateAndDelete($id, $this->data);
+			if ($result === true) {
+				$this->Session->setFlash(__('Calendar deleted', true));
+				$this->redirect(array('action' => 'index'));
+			}
+		} catch (Exception $e) {
+			$this->Session->setFlash($e->getMessage());
+			$this->redirect(array('action' => 'index'));
+		}
+		if (!empty($this->Calendar->data['calendar'])) {
+			$this->set('calendar', $this->Calendar->data['calendar']);
+		}
+	}
+
 }
 ?>
