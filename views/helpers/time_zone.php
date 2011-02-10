@@ -1,9 +1,16 @@
 <?php
-class TimeZoneHelper extends AppHelper { 
-     
-    public $helpers = array('Form'); 
+class TimeZoneHelper extends AppHelper {
+/**
+ * Helpers
+ *
+ * @var array
+ */
+	public $helpers = array('Form', 'Time');
 
-    var $timezones = array( 
+/**
+ * 
+ */
+	public $timezones = array( 
         'Kwajalein' => 'Eniwetok, Kwajalein', 
         'Pacific/Midway' => 'Midway Island, Somoa', 
         'Pacific/Honolulu' => 'Hawaii', 
@@ -52,6 +59,6 @@ class TimeZoneHelper extends AppHelper {
 
     function display($index) { 
         return $this->output($this->timezones[$index]); 
-    } 
+    }
+
 }
-?>

@@ -35,12 +35,50 @@ class CalendarDate extends DateTime {
 	}
 
 /**
+ * Returns the current UTC offset for a given timezone
+ *
+ * @param string Timezone
+ * @param string date time string, default is now
+ * @return string Offset like +01:00 or -04:00
+ */
+	public static function getTimeZoneOffset($timeZone, $date = 'now') {
+		$DateTime = new DateTime($date);
+		$DateTime->setTimeZone(new DateTimeZone($timeZone));
+		return $DateTime->format('P');
+	}
+
+/**
+ * 
+ */
+	static public function formatDate($time, $format, $timezone) {
+		$DateTime = new DateTime($time, new DateTimeZone($timezone));
+		return $DateTime->format($format);
+	}
+
+/**
+ * Converts the timezone of a UTC time string in another timezone
+ *
+ * @param string Time in UTC format
+ * @param timezone
+ * @return string UTC time
+ */
+	public static function convertTimeZone($time, $from, $to = 'UTC', $format = 'Y-m-d H:i:s') {
+		if (is_numeric($time)) {
+			$time = '@' . $time;
+		}
+
+		$DateTime = new DateTime($time, new DateTimeZone($from));
+		$DateTime->setTimezone(new DateTimeZone($to));
+		return $DateTime->format($format);
+	}
+
+/**
  * Converts a unix timestamp into a SQL date..
  *
  * @param string Unix timestamp.
  * @return string Time formatted as $this->date_format
  * @access public
- */		
+ */
 	public static function unixToDate($unixtime = null) {
 		$date = new DateTime('@'.$unixtime);
 		return $date->format(self::$defaultFormat);
@@ -150,4 +188,5 @@ class CalendarDate extends DateTime {
 	public function toAtom() {
 		return $this->format('Y-m-d\TH:i:s\Z');
 	}
+
 }
