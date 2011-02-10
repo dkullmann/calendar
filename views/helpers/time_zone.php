@@ -1,4 +1,18 @@
 <?php
+App::import('Lib', 'Calendar.CalendarDate');
+/**
+ * TimeZone Helper class file.
+ *
+ * PHP versions 5
+ *
+ */
+
+/**
+ * TimeZone Helper class for easy use of timezone manipulation.
+ *
+ * Manipulation of timezone data.
+ *
+ */ 
 class TimeZoneHelper extends AppHelper {
 /**
  * Helpers
@@ -7,58 +21,203 @@ class TimeZoneHelper extends AppHelper {
  */
 	public $helpers = array('Form', 'Time');
 
+/** 
+ * Options 
+ *
+ * @var array 
+ */ 
+	private $__options = array('path' => 'autoload'); 
+
 /**
- * 
+ * Time Zones
+ *
+ * @var array
  */
-	public $timezones = array( 
-        'Kwajalein' => 'Eniwetok, Kwajalein', 
-        'Pacific/Midway' => 'Midway Island, Somoa', 
-        'Pacific/Honolulu' => 'Hawaii', 
-        'America/Anchorage' => 'Alaska', 
-        'America/Los_Angeles' => 'Pacific Time (US & Canada)', 
-        'America/Denver' => 'Mountain Time (US & Canada)', 
-        'America/Tegucigalpa' => 'Central Time (US & Canada), Mexico City', 
-        'America/New_York' => 'Eastern Time (US & Canada), Bogota, Lima, Quito', 
-        'America/Halifax' => 'Atlantic Time (Canada), Caracas, La Paz', 
-        'America/St_Johns' => 'Newfoundland', 
-        'America/Argentina/Buenos_Aires' => 'Brazil, Buenos Aires, Georgetown', 
-        'Atlantic/South_Georgia' => 'Mid-Atlantic', 
-        'Atlantic/Azores' => 'Azores, Cape Verde Islands', 
-        'Europe/Dublin' => 'Western Europe Time, London', 
-        'Europe/Belgrade' => 'CET (Central Europe Time), Brussels', 
-        'Europe/Minsk' => 'EET (Eastern Europe Time), South Africa', 
-        'Asia/Kuwait' => 'Baghdad, Kuwait, Riyadh, Moscow', 
-        'Asia/Tehran' => 'Tehran', 
-        'Asia/Muscat' => 'Abu Dhabi, Muscat', 
-        'Asia/Yekaterinburg' => 'Ekaterinburg, Islamabad', 
-        'Asia/Kolkata' => 'Bombay, Calcutta, Madras, New Delhi', 
-        'Asia/Dhaka' => 'Almaty, Dhaka, Colombo', 
-        'Asia/Krasnoyarsk' => 'Bangkok, Hanoi, Jakarta', 
-        'Asia/Brunei' => 'Beijing, Perth, Singapore, Hong Kong', 
-        'Asia/Seoul' => 'Tokyo, Seoul, Osaka, Sapporo', 
-        'Australia/Darwin' => 'Adelaide, Darwin', 
-        'Australia/Canberra' => 'EAST (East Australian Standard)', 
-        'Asia/Magadan' => 'Magadan, Solomon Islands', 
-        'Pacific/Fiji' => 'Auckland, Wellington, Fiji', 
-        'Pacific/Tongatapu' => 'Tongatapu' 
-    ); 
+	protected $_timeZones = array();
 
-    function select($fieldname, $label="Time zone") { 
-    
-        $list = $this->Form->input( 
-            $fieldname,  
-            array( 
-                "type" => "select", 
-                "label" => $label, 
-                "options" => $this->timezones, 
-                "error" => "Please select your time zone" 
-            ) 
-        ); 
-        return $this->output($list); 
-    } 
+/**
+ * Countries
+ *
+ * @var array
+ */
+	protected $_countries = array();
 
-    function display($index) { 
-        return $this->output($this->timezones[$index]); 
-    }
+/**
+ * Constructor
+ *
+ * @return void
+ */
+	public function __construct($options = array()) {
+		$defaults = array(
+			'timeZones' => array('cst', 'est', 'mst', 'pst', 'akst'),
+			'countries' => array('America'),
+			'appTimeZone' => Configure::read('App.defaultTimezone'),
+			'userTimeZone' => Configure::read('App.User.timeZone'));
+		parent::__construct($options);
+		$this->__options = array_merge($defaults, $options); 
+
+		$this->setTimeZones($this->__options['timeZones']);
+		$this->setCountries($this->__options['countries']);
+
+	}
+
+/**
+ * Utility function to re-index the array returned
+ * from getTimeZones(). The $a is integer indexed
+ * from the order of DateTimeZone::listIdentifiers()
+ * so we need to reindex it to match proper formating
+ *
+ * @param array;
+ * @return new indexed array;
+ */
+	protected function __format(array $array) {
+		$i=0;
+		foreach ($array as $key => $val) {
+			if (is_array($val)) {
+				foreach ($val as $k => $v) {
+					if (is_array($v)) {
+						foreach ($v as $a => $b) {
+							$name = $b['name'];
+							$offset = $b['offset'];
+							$vname = str_replace('_', ' ', end(explode('/', $name)));
+							$voffset = $offset / 3600;
+							$mod = $offset % 3600;
+							if ($mod) {
+								$vminutes = abs($mod / 60);
+							} else {
+								$vminutes = '00';
+							}
+							$display = sprintf('(GMT %d:%s) %s', $voffset, $vminutes, $vname);
+							$arr[$key][$name] = $display;
+						}
+					}
+				}
+			}
+		}
+		return $arr;
+	}
+
+/**
+ * Converts the timezone of UTC time in another timezone
+ *
+ * @param string Time in UTC format
+ * @param timezone
+ * @return string UTC time
+ */
+	public function convert($time, $fromTimeZone = null, $toTimeZone = null, $format = 'Y-m-d H:i:s') {
+		if (empty($fromTimeZone)) {
+			$fromTimeZone = $this->__options['appTimeZone'];
+		}
+		if (empty($toTimeZone)) {
+			$toTimeZone = $this->__options['userTimeZone'];
+		}
+		return CalendarDate::convertTimeZone($time, $fromTimeZone, $toTimeZone, $format);
+	}
+
+	public function longFormat($time = null) {
+		$time = CalendarDate::convertTimeZone($time, $this->__options['appTimeZone'], $this->__options['userTimeZone'], 'c');
+		$string = CalendarDate::formatDate($time, 'D, M nS Y', $this->__options['userTimeZone']);
+		$string .= ' at ';
+		$string .= CalendarDate::formatDate($time, 'g:iA', $this->__options['userTimeZone']);
+		return $string;
+	}
+
+/**
+ * This function takes an array of the old style of time zone
+ * abreviations. e.g. CST, EST, PST
+ *
+ * @param array;
+ * @return none; sets $this->_timeZones variable
+ */
+		public function setTimeZones (array $array) {
+			$this->_timeZones = $array;
+		}
+
+/**
+ * This function takes an array of the continent names for which
+ * you want to get the valid time zone names for
+ *
+ * @param array;
+ * @return none; sets $this->_countries variable
+ */
+		public function setCountries (array $countries) {
+			$this->_countries = $countries;
+		}
+
+/**
+ * This function is similiar to the dateTime::listabbreviations method
+ * but this one weeds out those time zones that are not recognized.
+ *
+ * @param none;
+ * @return array; a multidimensional [country][time zone abreviation][city/offset]
+ */
+	public function getTimeZones() {
+		$ident = DateTimeZone::listIdentifiers();
+		$cntIdent = count($ident);
+		$zones = $this->_timeZones;
+		$cntZones = count($zones);
+
+		for ($i = 0; $i < $cntZones; $i++ ) {
+			for ($j = 0; $j < $cntIdent; $j++) {
+				$date = new DateTime(null, new DateTimeZone($ident[$j]));
+				$zoneFormat = $date->format('T');
+				$tz = $date->getTimezone();
+				$tzName = $tz->getName();
+				$offset = $date->getOffset();
+
+				$utc[$j] = array('name' => $tzName, 'offset' => $offset);
+
+				if (strtoupper($zones[$i]) == $zoneFormat) {
+					$ex = explode('/', $tzName);
+					sort($this->_countries);
+
+					for ( $z = 0; $z < count($this->_countries); $z++) {
+						if ($ex[0] == ucwords($this->_countries[$z])) {
+							$array[$ex[0]][$zoneFormat][$j] = array('name' => $tzName, 'offset' => $offset);
+						}
+					}
+				}
+			}
+		}
+		return $this->__format($array);
+	}
+
+/**
+ * Generates a select dropdown with a list of timezones
+ *
+ * @param string $fieldname Name of the field
+ * @param array $options Classic FormHelper::input options extended with:
+ *	- auto: if true all existing world timezones will be loaded, otherwise default values will be used
+ *	- utc_offset: if true the UTC offset will be added in an "utc_offset" html attribute for each option
+ * @return string Html markup for the dropdown
+ */
+	public function select($fieldname, $options = array()) {
+		$options = array_merge(
+			array('auto' => false, 'utc_offset' => false),
+			$options);
+		$default = array(
+			'America/Los_Angeles' => 'PST',
+			'America/Chicago' => 'CST',
+			'America/New_York' => 'EST',
+			'America/Phoenix' => 'MST'
+		);
+		$set = !empty($options['auto']) ? $this->getTimezones() : $default;
+
+		if ($options['utc_offset']) {
+			$newSet = array();
+			foreach($set as $value => $name) {
+				$LocalTime = new DateTime(null, new DateTimeZone($value));
+				$newSet[] = array(
+					'name' => $name,
+					'value' => $value,
+					'utc_offset' => $LocalTime->getOffset() / 3600
+				);
+			}
+			$set = $newSet;
+		}
+
+		unset($options['auto'], $options['utc_offset']);
+		return $this->Form->input($fieldname, array('type' => 'select', 'options' => $set) + $options);
+	}
 
 }
