@@ -88,7 +88,11 @@ class TimeZoneHelper extends AppHelper {
 								$vminutes = '00';
 							}
 							$display = sprintf('(GMT %d:%s) %s', $voffset, $vminutes, $vname);
-							$arr[$key][$name] = $display;
+							$arr[$key][] = array(
+								'name' => $display,
+								'value' => $name,
+								'utc_offset' => $b['offset'],
+								);
 						}
 					}
 				}
@@ -216,6 +220,7 @@ class TimeZoneHelper extends AppHelper {
 			$set = $newSet;
 		}
 
+		array_unshift($set, 'Select your time zone');
 		unset($options['auto'], $options['utc_offset']);
 		return $this->Form->input($fieldname, array('type' => 'select', 'options' => $set) + $options);
 	}
