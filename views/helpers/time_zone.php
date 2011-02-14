@@ -114,7 +114,11 @@ class TimeZoneHelper extends AppHelper {
 								$vminutes = '00';
 							}
 							$display = sprintf('(GMT %d:%s) %s', $voffset, $vminutes, $vname);
-							$arr[$k][$name] = $display;
+							$arr[$k][] = array(
+								'name' => $display,
+								'value' => $name,
+								'utc_offset' => $b['offset'],
+								);
 						}
 					}
 				}
