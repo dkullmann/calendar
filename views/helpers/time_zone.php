@@ -99,13 +99,13 @@ class TimeZoneHelper extends AppHelper {
 						foreach ($v as $a => $b) {
 							$name = $b['name'];
 							if (in_array($name, $this->_commonZones)) {
-								$name = $this->_commonNames[$name];
+								$vname = $this->_commonNames[$name];
 								$k = 'Common Zones';
 							} else {
 								$k = $key;
+								$vname = str_replace('_', ' ', end(explode('/', $name)));
 							}
 							$offset = $b['offset'];
-							$vname = str_replace('_', ' ', end(explode('/', $name)));
 							$voffset = $offset / 3600;
 							$mod = $offset % 3600;
 							if ($mod) {
