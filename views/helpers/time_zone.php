@@ -49,16 +49,36 @@ class TimeZoneHelper extends AppHelper {
  */
 	public function __construct($options = array()) {
 		$defaults = array(
-			'timeZones' => array('cst', 'est', 'mst', 'pst', 'akst'),
-			'countries' => array('America'),
+			'timeZones' => array('cst', 'est', 'mst', 'pst', 'akst', 'hst'),
+			'countries' => array('America', 'Pacific'),
 			'appTimeZone' => Configure::read('App.defaultTimezone'),
-			'userTimeZone' => Configure::read('App.User.timeZone'));
+			'userTimeZone' => Configure::read('App.User.timeZone'),
+			'commonZones' => array(
+				'Pacific/Honolulu',
+				'America/Anchorage',
+				'America/Los_Angeles',
+				'America/Denver',
+				'America/Phoenix',
+				'America/Chicago',
+				'America/New_York',
+			),
+			'commonNames' => array(
+				'Pacific/Honolulu' => 'Hawaii Time',
+				'America/Anchorage' => 'Alaska Time',
+				'America/Los_Angeles' => 'Pacific Time',
+				'America/Denver' => 'Mountain Time',
+				'America/Phoenix' => 'Mountain Time - Arizona',
+				'America/Chicago' => 'Central Time',
+				'America/New_York' => 'Eastern Time',
+			),
+		);
 		parent::__construct($options);
 		$this->__options = array_merge($defaults, $options); 
 
 		$this->setTimeZones($this->__options['timeZones']);
 		$this->setCountries($this->__options['countries']);
-
+		$this->setCommonZones($this->__options['commonZones']);
+		$this->setCommonNames($this->__options['commonNames']);
 	}
 
 /**
@@ -78,6 +98,12 @@ class TimeZoneHelper extends AppHelper {
 					if (is_array($v)) {
 						foreach ($v as $a => $b) {
 							$name = $b['name'];
+							if (in_array($name, $this->_commonZones)) {
+								$name = $this->_commonNames[$name];
+								$k = 'Common Zones';
+							} else {
+								$k = $key;
+							}
 							$offset = $b['offset'];
 							$vname = str_replace('_', ' ', end(explode('/', $name)));
 							$voffset = $offset / 3600;
@@ -88,16 +114,16 @@ class TimeZoneHelper extends AppHelper {
 								$vminutes = '00';
 							}
 							$display = sprintf('(GMT %d:%s) %s', $voffset, $vminutes, $vname);
-							$arr[$key][] = array(
-								'name' => $display,
-								'value' => $name,
-								'utc_offset' => $b['offset'],
-								);
+							$arr[$k][$name] = $display;
 						}
 					}
 				}
 			}
 		}
+		$ac['Common Zones'] = $arr['Common Zones'];
+		$aa['America'] = $arr['America'];
+		$ap['Pacific'] = $arr['Pacific'];
+		$arr = array_merge($ac, $aa, $ap);
 		return $arr;
 	}
 
@@ -149,6 +175,26 @@ class TimeZoneHelper extends AppHelper {
 		}
 
 /**
+ * This function takes an array of the common time zone names
+ *
+ * @param array;
+ * @return none; sets $this->_commonZones variable
+ */
+		public function setCommonZones (array $commonZones) {
+			$this->_commonZones = $commonZones;
+		}
+
+/**
+ * This function takes an array of the common time zone names
+ *
+ * @param array;
+ * @return none; sets $this->_commonNames variable
+ */
+		public function setCommonNames (array $commonNames) {
+			$this->_commonNames = $commonNames;
+		}
+
+/**
  * This function is similiar to the dateTime::listabbreviations method
  * but this one weeds out those time zones that are not recognized.
  *
@@ -168,13 +214,10 @@ class TimeZoneHelper extends AppHelper {
 				$tz = $date->getTimezone();
 				$tzName = $tz->getName();
 				$offset = $date->getOffset();
-
 				$utc[$j] = array('name' => $tzName, 'offset' => $offset);
 
 				if (strtoupper($zones[$i]) == $zoneFormat) {
 					$ex = explode('/', $tzName);
-					sort($this->_countries);
-
 					for ( $z = 0; $z < count($this->_countries); $z++) {
 						if ($ex[0] == ucwords($this->_countries[$z])) {
 							$array[$ex[0]][$zoneFormat][$j] = array('name' => $tzName, 'offset' => $offset);
