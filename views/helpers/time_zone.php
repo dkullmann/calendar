@@ -100,7 +100,7 @@ class TimeZoneHelper extends AppHelper {
 							$name = $b['name'];
 							if (in_array($name, $this->_commonZones)) {
 								$vname = $this->_commonNames[$name];
-								$k = 'Common Zones';
+								$k = 'Common Time Zones';
 							} else {
 								$k = $key;
 								$vname = str_replace('_', ' ', end(explode('/', $name)));
@@ -120,7 +120,7 @@ class TimeZoneHelper extends AppHelper {
 				}
 			}
 		}
-		$ac['Common Zones'] = $arr['Common Zones'];
+		$ac['Common Time Zones'] = $arr['Common Time Zones'];
 		$aa['America'] = $arr['America'];
 		$ap['Pacific'] = $arr['Pacific'];
 		$arr = array_merge($ac, $aa, $ap);
