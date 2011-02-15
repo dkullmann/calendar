@@ -1,6 +1,6 @@
 <?php
 
-class CalendarAppModel extends Model {
+class CalendarAppModel extends AppModel {
 
 	public $actsAs = array('Containable');
 

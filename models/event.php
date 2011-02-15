@@ -31,6 +31,7 @@ class Event extends CalendarAppModel {
 			'order' => ''
 		)
 	);
+
 /**
  * hasMany association
  *
@@ -39,6 +40,11 @@ class Event extends CalendarAppModel {
  */
 
 	public $hasMany = array(
+		'Attendee' => array(
+			'className' => 'Calendar.Attendee',
+			'foreignKey' => 'event_id',
+			'dependent' => true
+		),
 		'RecurrenceRule' => array(
 			'className' => 'Calendar.RecurrenceRule',
 			'foreignKey' => 'event_id',
@@ -288,11 +294,15 @@ class Event extends CalendarAppModel {
 
  	/* TODO: There may be more logic required if we are not the primary model. */
 	public function afterFind($results, $primary) {
-		$events = array();
-		if (empty($this->_recurrenceStart) || empty($this->_recurrenceEnd)) {
+		if ($this->findQueryType == 'count' || empty($this->_recurrenceStart) || empty($this->_recurrenceEnd)) {
 		    return $results;
 		}
+		$events = $this->calculateRecurrence($results);
+		return parent::afterFind($events, $primary);
+	}
 
+	public function calculateRecurrence($results) {
+		$events = array();
 		foreach ($results as $event) {
 			if (isset($event['RecurrenceRule']) && count($event['RecurrenceRule']) > 0) {
 
@@ -311,6 +321,6 @@ class Event extends CalendarAppModel {
 			}
 		}
         $this->_recurrenceStart = $this->_recurrenceEnd = null;
-		return parent::afterFind($events, $primary);
+		return $events;
 	}
 }

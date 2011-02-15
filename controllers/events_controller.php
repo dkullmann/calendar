@@ -30,7 +30,7 @@ class EventsController extends CalendarAppController {
  * @param string $calendarId, Calendar id 
  * @access public
  */
-	public function index($calendarId = null) {
+	public function index($calendarId = null, $viewType = null) {
 		if ($calendarId) {
 			$this->paginate['conditions']['calendar_id'] = $calendarId;
 		}
@@ -49,6 +49,7 @@ class EventsController extends CalendarAppController {
 		}
 
 		$this->paginate['contain'][] = 'RecurrenceRule';
+		$this->paginate['viewType'] = $viewType;
 		$this->set('events', $this->paginate());
 		$this->set(compact('calendarId')); 
 	}

@@ -65,7 +65,7 @@ class Calendar extends CalendarAppModel {
  * @access public
  */
 	public function __construct($id = false, $table = null, $ds = null) {
-		if ($userClass = Configure::read('App.userClass')) {
+		if ($userClass = Configure::read('App.UserClass')) {
 			$this->belongsTo['User']['className'] = $userClass;
 		}
 		parent::__construct($id, $table, $ds);
