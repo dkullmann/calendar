@@ -86,9 +86,9 @@ class Event extends CalendarAppModel {
  */
 	public function add($calendarId = null, $data = null) {
 		if (!empty($data)) {
-			$data['Event']['calendar_id'] = $calendarId;
+			$data[$this->alias]['calendar_id'] = $calendarId;
 			if (!empty($data['RecurrenceRule'])) {
-			    $data['Event']['recurring'] = true;
+			    $data[$this->alias]['recurring'] = true;
 			}
 			$this->create();
 			$result = $this->saveAll($data);
@@ -176,7 +176,7 @@ class Event extends CalendarAppModel {
 
 		$this->data['event'] = $event;
 		if (!empty($data)) {
-			$data['Event']['id'] = $id;
+			$data[$this->alias]['id'] = $id;
 			$tmp = $this->validate;
 			$this->validate = array(
 				'id' => array('rule' => 'notEmpty'),
@@ -184,7 +184,7 @@ class Event extends CalendarAppModel {
 
 			$this->set($data);
 			if ($this->validates()) {
-				if ($this->delete($data['Event']['id'])) {
+				if ($this->delete($data[$this->alias]['id'])) {
 					return true;
 				}
 			}
@@ -264,8 +264,8 @@ class Event extends CalendarAppModel {
 
 			$query['conditions']['OR'] = array(
 					"AND" => array (
-						"Event.end_date >" => $query['conditions']['start_date'],
-						"Event.start_date <" => $query['conditions']['end_date'],
+						$this->alias . ".end_date >" => $query['conditions']['start_date'],
+						$this->alias . ".start_date <" => $query['conditions']['end_date'],
 					),
 					"Event.recurring" => true,
 				);
@@ -294,7 +294,7 @@ class Event extends CalendarAppModel {
 		}
 
 		foreach ($results as $event) {
-			if (isset($event['RecurrenceRule']) && count($event['RecurrenceRule']) >= 1) {
+			if (isset($event['RecurrenceRule']) && count($event['RecurrenceRule']) > 0) {
 
 				$oneDay = new DateInterval('P1D');
 				$end_day = new CalendarDate($this->_recurrenceEnd);
