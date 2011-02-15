@@ -59,7 +59,7 @@ foreach ($events as $event):
 			<?php echo $event['Event']['id']; ?>
 		</td>
 		<td>
-			<?php echo $this->Html->link($event['Calendar']['title'], array('controller' => 'calendar.calendars', 'action' => 'view', $event['Calendar']['id'])); ?>
+			<?php echo $this->Html->link($event['Calendar']['title'], array('controller' => 'calendars', 'action' => 'view', $event['Calendar']['id'])); ?>
 		</td>
 		<td>
 			<?php echo $event['Event']['title']; ?>

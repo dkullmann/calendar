@@ -34,18 +34,20 @@ class EventsController extends CalendarAppController {
 		if ($calendarId) {
 			$this->paginate['conditions']['calendar_id'] = $calendarId;
 		}
+		$offset = 0;
+		if (!empty($this->params['url']['browserOffset'])) {
+			$this->set('browserOffset', $this->params['url']['browserOffset']);
+			$offset = $this->params['url']['browserOffset']; 
+		}
 
 		if (!empty($this->params['url']['start'])) {
-			$this->paginate['conditions']['start_date'] = CalendarDate::unixToDate($this->params['url']['start']);
+			$this->paginate['conditions']['start_date'] = CalendarDate::unixToDate($this->params['url']['start'], $offset);
 		}
 
 		if (!empty($this->params['url']['end'])) {
-			$this->paginate['conditions']['end_date'] = CalendarDate::unixToDate($this->params['url']['end']);
+			$this->paginate['conditions']['end_date'] = CalendarDate::unixToDate($this->params['url']['end'], $offset);
 		}
 
-		if (!empty($this->params['url']['browserOffset'])) {
-			$this->set('browserOffset', $this->params['url']['browserOffset']);	
-		}
 		$this->paginate['contain'][] = 'RecurrenceRule';
 		$this->set('events', $this->paginate());
 		$this->set(compact('calendarId')); 
@@ -81,7 +83,7 @@ class EventsController extends CalendarAppController {
 			$result = $this->Event->add($calendarId, $this->data);
 			if ($result === true) {
 				$this->Session->setFlash(__('The event has been saved', true));
-				$this->redirect(array('action' => 'index', $calendarId));
+				$this->redirect(array('controller' => 'calendars', 'action' => 'view', $calendarId));
 			}
 		} catch (OutOfBoundsException $e) {
 			$this->Session->setFlash($e->getMessage());
@@ -89,8 +91,6 @@ class EventsController extends CalendarAppController {
 			$this->Session->setFlash($e->getMessage());
 			$this->redirect(array('action' => 'index', $calendarId));
 		}
-		$calendars = $this->Event->Calendar->find('list');
-		$this->set(compact('calendars'));
 		$this->set(compact('calendarId')); 
 	}
 

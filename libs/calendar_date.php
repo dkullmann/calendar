@@ -79,8 +79,13 @@ class CalendarDate extends DateTime {
  * @return string Time formatted as $this->date_format
  * @access public
  */
-	public static function unixToDate($unixtime = null) {
+	public static function unixToDate($unixtime = null, $offset = null) {
 		$date = new DateTime('@'.$unixtime);
+		if ($offset) {
+			$offset *= 3600;
+			$operation = ($offset < 0) ? 'sub' : 'add';
+			$date->{$operation}(new DateInterval('PT' . abs($offset) . 'S'));
+		}
 		return $date->format(self::$defaultFormat);
 	}
 

@@ -87,6 +87,9 @@ class Event extends CalendarAppModel {
 	public function add($calendarId = null, $data = null) {
 		if (!empty($data)) {
 			$data['Event']['calendar_id'] = $calendarId;
+			if (!empty($data['RecurrenceRule'])) {
+			    $data['Event']['recurring'] = true;
+			}
 			$this->create();
 			$result = $this->saveAll($data);
 			if ($result !== false) {
@@ -236,16 +239,12 @@ class Event extends CalendarAppModel {
  * @link http://book.cakephp.org/view/1048/Callback-Methods#beforeSave-1052
  */
 	public function beforeSave($options = array()) {
+		$user_tz = new DateTimeZone($this->data[$this->alias]['time_zone']);
 
-		extract($this->data[$this->alias]);
-
-		$user_tz = new DateTimeZone($time_zone);
-
-		$this->data[$this->alias]['start_date'] = CalendarDate::convertToUTC($start_date, $user_tz);
-		$this->data[$this->alias]['end_date']   = CalendarDate::convertToUTC($end_date, $user_tz);
+		$this->data[$this->alias]['start_date'] = CalendarDate::convertToUTC($this->data[$this->alias]['start_date'], $user_tz);
+		$this->data[$this->alias]['end_date']   = CalendarDate::convertToUTC($this->data[$this->alias]['end_date'], $user_tz);
 
 		return true;
-
 	}
 
 /**
@@ -259,7 +258,6 @@ class Event extends CalendarAppModel {
 
  	/* TODO: We should make a $query parameter 'recurring' to use here */
 	public function beforeFind($query) {
-
 		if(!empty($query['conditions']['start_date']) && !empty($query['conditions']['end_date'])) {
 			$this->_recurrenceStart = $query['conditions']['start_date'];
 			$this->_recurrenceEnd = $query['conditions']['end_date'];
@@ -290,27 +288,29 @@ class Event extends CalendarAppModel {
 
  	/* TODO: There may be more logic required if we are not the primary model. */
 	public function afterFind($results, $primary) {
-			$events = array();
-			foreach ($results as $event) {
-				if (isset($event['RecurrenceRule']) && count($event['RecurrenceRule']) >= 1) {
+		$events = array();
+		if (empty($this->_recurrenceStart) || empty($this->_recurrenceEnd)) {
+		    return $results;
+		}
 
-					$one_day = new DateInterval('P1D');
-					$end_day = new CalendarDate($this->_recurrenceEnd);
+		foreach ($results as $event) {
+			if (isset($event['RecurrenceRule']) && count($event['RecurrenceRule']) >= 1) {
 
-					for ($date = new CalendarDate($this->_recurrenceStart); $date <= $end_day; $date->add($one_day)) {
+				$oneDay = new DateInterval('P1D');
+				$end_day = new CalendarDate($this->_recurrenceEnd);
 
-						foreach ($event['RecurrenceRule'] as $rule) {
-							if ($this->RecurrenceRule->ruleIsTrue($rule, $date)) {
-								$events[] = $this->renderEventForDate($event, $date);
-							}
+				for ($date = new CalendarDate($this->_recurrenceStart); $date <= $end_day; $date->add($oneDay)) {
+					foreach ($event['RecurrenceRule'] as $rule) {
+						if ($this->RecurrenceRule->ruleIsTrue($rule, $date)) {
+							$events[] = $this->renderEventForDate($event, clone $date);
 						}
 					}
-
-				} else {
-					$events[] = $event;
 				}
+			} else {
+				$events[] = $event;
 			}
-
+		}
+        $this->_recurrenceStart = $this->_recurrenceEnd = null;
 		return parent::afterFind($events, $primary);
 	}
 }
