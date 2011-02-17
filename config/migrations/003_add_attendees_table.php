@@ -60,5 +60,5 @@ class M4d5aace3e14447039fe85ece79cafc24 extends CakeMigration {
 	public function after($direction) {
 		return true;
 	}
+
 }
-?>

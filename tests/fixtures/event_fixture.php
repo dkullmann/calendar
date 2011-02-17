@@ -1,5 +1,4 @@
 <?php
-/* Event Fixture generated on: 2011-02-02 14:02:38 : 1296671498 */
 class EventFixture extends CakeTestFixture {
 /**
  * Name
@@ -24,6 +23,7 @@ class EventFixture extends CakeTestFixture {
 		'recurring' => array('type' => 'boolean', 'null' => false, 'default' => '0'),
 		'time_zone' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 100, 'collate' => 'utf8_unicode_ci', 'charset' => 'utf8'),
 		'summary' => array('type' => 'string', 'null' => true, 'default' => NULL, 'collate' => 'utf8_unicode_ci', 'charset' => 'utf8'),
+		'type' => array('type' => 'string', 'null' => true, 'default' => NULL, 'lenght' => '30'),
 		'created' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
 		'modified' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
 		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1), 'EVENTS_CALENDAR_FK' => array('column' => 'calendar_id', 'unique' => 0)),
@@ -46,10 +46,10 @@ class EventFixture extends CakeTestFixture {
 			'recurring' => 1,
 			'time_zone' => 'Lorem ipsum dolor sit amet',
 			'summary' => 'Lorem ipsum dolor sit amet',
+			'type' => '',
 			'created' => '2011-02-02 14:01:38',
 			'modified' => '2011-02-02 14:01:38'
 		),
 	);
 
 }
-?>

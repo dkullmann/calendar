@@ -54,8 +54,6 @@ class Calendar extends CalendarAppModel {
 		)
 	);
 
-
-
 /**
  * Constructor
  *
