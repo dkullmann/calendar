@@ -270,8 +270,8 @@ class Event extends CalendarAppModel {
 
 			$query['conditions']['OR'] = array(
 					"AND" => array (
-						$this->alias . ".end_date >" => $query['conditions']['start_date'],
-						$this->alias . ".start_date <" => $query['conditions']['end_date'],
+						$this->alias . ".end_date >=" => $query['conditions']['start_date'],
+						$this->alias . ".start_date <=" => $query['conditions']['end_date'],
 					),
 					"Event.recurring" => true,
 				);

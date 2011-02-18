@@ -24,6 +24,13 @@ class EventsController extends CalendarAppController {
  */
 	public $components = array('RequestHandler');
 
+
+	function beforeFilter() {
+		if (isset($this->Auth)) {
+			$this->Auth->allow('index');
+		}
+	}
+
 /**
  * Index for event.
  *
