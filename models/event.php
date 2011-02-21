@@ -236,28 +236,19 @@ class Event extends CalendarAppModel {
 
 		$rendered_event = $event;
 
-		$user_tz = new DateTimeZone($event[$this->alias]['time_zone']);
-
 		$start_date = new CalendarDate($event[$this->alias]['start_date']);
 		$end_date   = new CalendarDate($event[$this->alias]['end_date']);
-
 		$interval = $start_date->diff($end_date);
 		$interval = new DateInterval("PT{$interval->h}H{$interval->i}M");
 
-		$start_date->setTimezone($user_tz);
-
 		$floating_start_hour = $start_date->format('H');
-
-		$date->setTimezone($user_tz);
 		$date->setTime($floating_start_hour, $date->format('i'), $date->format('s'));
-		$date->setTimezone($this->utc_tz);
 		$event[$this->alias]['start_date'] = $date->format();
 
 		$date->add($interval);
 		$event[$this->alias]['end_date'] = $date->format();
 
 		return $event;
-
 	}
 
 /**
