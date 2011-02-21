@@ -90,9 +90,16 @@ class Event extends CalendarAppModel {
  * @return array
  * @access public
  */
-	public function add($calendarId = null, $data = null) {
+	public function add($calendarId = null, $data = null, $frequency = null) {
 		if (!empty($data)) {
 			$data[$this->alias]['calendar_id'] = $calendarId;
+			if (!empty($frequency) && !empty($data[$this->alias]['start_date'])) {
+				$this->data['RecurrenceRule'] = $this->buildRerurrenceByFrequency(
+					$data[$this->alias]['start_date'],
+					$data[$this->alias]['time_zone'],
+					$frequency
+				);
+			}
 			if (!empty($data['RecurrenceRule'])) {
 			    $data[$this->alias]['recurring'] = true;
 			}
@@ -138,17 +145,11 @@ class Event extends CalendarAppModel {
 
 			if ($frequency) {
 				$this->RecurrenceRule->deleteAll(array('event_id' => $id));
-				$startDate = new CalendarDate(
+				$this->data['RecurrenceRule'] = $this->buildRerurrenceByFrequency(
 					$this->data[$this->alias]['start_date'],
-					new DateTimeZone($this->data[$this->alias]['time_zone'])
+					$this->data[$this->alias]['time_zone'],
+					$frequency
 				);
-				$startDate->setTimeZone(new DateTimeZone('UTC'));
-				$dayOfWeek = strtolower($startDate->format('l'));
-
-				$this->data['RecurrenceRule'] = array(array(
-					'frequency' => $frequency,
-					'bydaydays' => array($dayOfWeek)
-				));
 			}
 
 			$result = $this->saveAll($this->data);
@@ -162,6 +163,19 @@ class Event extends CalendarAppModel {
 		}
 	}
 
+	protected function buildRerurrenceByFrequency($date, $timeZone, $frequency) {
+		$startDate = new CalendarDate(
+			$date,
+			new DateTimeZone($timeZone)
+		);
+		$startDate->setTimeZone(new DateTimeZone('UTC'));
+		$dayOfWeek = strtolower($startDate->format('l'));
+
+		return array(array(
+			'frequency' => $frequency,
+			'bydaydays' => array($dayOfWeek)
+		));
+	}
 /**
  * Returns the record of a Event.
  *

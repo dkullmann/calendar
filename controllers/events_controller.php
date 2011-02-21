@@ -86,12 +86,18 @@ class EventsController extends CalendarAppController {
  * @param string $calendarId, Calendar id 
  * @access public
  */
-	public function add($calendarId) {
+	public function add($calendarId, $frequency = null) {
 		try {
-			$result = $this->Event->add($calendarId, $this->data);
+			if ($this->Event->Calendar->field('user_id', array('Calendar.id' => $calendarId)) != $this->Auth->user('id')) {
+				$this->redirect('/');
+			}
+			$result = $this->Event->add($calendarId, $this->data, $frequency);
 			if ($result === true) {
 				$this->Session->setFlash(__('The event has been saved', true));
-				$this->redirect(array('controller' => 'calendars', 'action' => 'view', $calendarId));
+				if ($this->RequestHandler->prefers('json')) {
+					$this->set('event', $this->Event->read());
+				}
+				$this->redirect(array('controller' => 'calendars', 'action' => 'view', $calendarId));				
 			}
 		} catch (OutOfBoundsException $e) {
 			$this->Session->setFlash($e->getMessage());
