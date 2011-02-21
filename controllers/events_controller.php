@@ -108,9 +108,9 @@ class EventsController extends CalendarAppController {
  * @param string $id, event id 
  * @access public
  */
-	public function edit($id = null) {
+	public function edit($id = null, $frequency = null) {
 		try {
-			$result = $this->Event->edit($id, $this->data);
+			$result = $this->Event->edit($id, $this->Auth->user('id'), $this->data, $frequency);
 			if ($result === true) {
 				$calendarId = $this->Event->data['Event']['calendar_id'];
 				$this->Session->setFlash(__('Event saved', true));
@@ -123,8 +123,6 @@ class EventsController extends CalendarAppController {
 			$this->Session->setFlash($e->getMessage());
 			$this->redirect('/');
 		}
-		$calendars = $this->Event->Calendar->find('list');
-		$this->set(compact('calendars'));
 		$this->set(compact('calendarId')); 
 	}
 

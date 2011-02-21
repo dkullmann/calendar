@@ -111,16 +111,22 @@ class Event extends CalendarAppModel {
  * Edits an existing Event.
  *
  * @param string $id, event id 
+ * @param string $user, event owner id
  * @param array $data, controller post data usually $this->data
+ * @param string $frequency, if set it will be taken as the default recurrence frequency for the event
+ * deleting all existing recurrence rules on database for the event
  * @return mixed True on successfully save else post data as array
  * @throws OutOfBoundsException If the element does not exists
  * @access public
  */
-	public function edit($id = null, $data = null) {
+	public function edit($id = null, $user = null, $data = null, $frequency = null) {
 		$event = $this->find('first', array(
 			'conditions' => array(
 				"{$this->alias}.{$this->primaryKey}" => $id,
-				)));
+				"Calendar.user_id" => $user,
+			),
+			'contain' => array('Calendar')
+		));
 
 		if (empty($event)) {
 			throw new OutOfBoundsException(__('Invalid Event', true));
@@ -129,9 +135,24 @@ class Event extends CalendarAppModel {
 
 		if (!empty($data)) {
 			$this->set($data);
-			$result = $this->save(null, true);
+
+			if ($frequency) {
+				$this->RecurrenceRule->deleteAll(array('event_id' => $id));
+				$startDate = new CalendarDate(
+					$this->data[$this->alias]['start_date'],
+					new DateTimeZone($this->data[$this->alias]['time_zone'])
+				);
+				$startDate->setTimeZone(new DateTimeZone('UTC'));
+				$dayOfWeek = strtolower($startDate->format('l'));
+
+				$this->data['RecurrenceRule'] = array(array(
+					'frequency' => $frequency,
+					'bydaydays' => array($dayOfWeek)
+				));
+			}
+
+			$result = $this->saveAll($this->data);
 			if ($result) {
-				$this->data = $result;
 				return true;
 			} else {
 				return $data;
