@@ -138,8 +138,11 @@ class EventsController extends CalendarAppController {
 		try {
 			$event = $this->Event->view($id);
 			$calendarId = $event['Event']['calendar_id'];			
-			$this->set(compact('calendarId')); 
-			$result = $this->Event->validateAndDelete($id, $this->data);
+			$this->set(compact('calendarId'));
+			if ($this->RequestHandler->isDelete()) {
+				$this->data[$this->Event->alias]['confirm'] = '1';
+			}
+			$result = $this->Event->validateAndDelete($id, $this->Auth->user('id'), $this->data);
 			if ($result === true) {
 				$this->Session->setFlash(__('Event deleted', true));
 				$this->redirect(array('action' => 'index', $calendarId));

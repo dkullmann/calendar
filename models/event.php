@@ -170,11 +170,14 @@ class Event extends CalendarAppModel {
  * @throws OutOfBoundsException If the element does not exists
  * @access public
  */
-	public function validateAndDelete($id = null, $data = array()) {
+	public function validateAndDelete($id = null, $user, $data = array()) {
 		$event = $this->find('first', array(
 			'conditions' => array(
 				"{$this->alias}.{$this->primaryKey}" => $id,
-				)));
+				'Calendar.user_id' => $user
+			),
+			'contain' => array('Calendar')
+		));
 
 		if (empty($event)) {
 			throw new OutOfBoundsException(__('Invalid Event', true));
