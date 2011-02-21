@@ -269,11 +269,15 @@ class Event extends CalendarAppModel {
  * @link http://book.cakephp.org/view/1048/Callback-Methods#beforeSave-1052
  */
 	public function beforeSave($options = array()) {
-		$user_tz = new DateTimeZone($this->data[$this->alias]['time_zone']);
-
-		$this->data[$this->alias]['start_date'] = CalendarDate::convertToUTC($this->data[$this->alias]['start_date'], $user_tz);
-		$this->data[$this->alias]['end_date']   = CalendarDate::convertToUTC($this->data[$this->alias]['end_date'], $user_tz);
-
+		if (
+			!empty($this->data[$this->alias]['time_zone']) &&
+			!empty($this->data[$this->alias]['start_date']) &&
+			!empty($this->data[$this->alias]['end_date'])
+		) {
+			$user_tz = new DateTimeZone($this->data[$this->alias]['time_zone']);
+			$this->data[$this->alias]['start_date'] = CalendarDate::convertToUTC($this->data[$this->alias]['start_date'], $user_tz);
+			$this->data[$this->alias]['end_date']   = CalendarDate::convertToUTC($this->data[$this->alias]['end_date'], $user_tz);
+		}
 		return true;
 	}
 
