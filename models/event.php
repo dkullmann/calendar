@@ -94,7 +94,7 @@ class Event extends CalendarAppModel {
 		if (!empty($data)) {
 			$data[$this->alias]['calendar_id'] = $calendarId;
 			if (!empty($frequency) && !empty($data[$this->alias]['start_date'])) {
-				$this->data['RecurrenceRule'] = $this->buildRerurrenceByFrequency(
+				$data['RecurrenceRule'] = $this->buildRerurrenceByFrequency(
 					$data[$this->alias]['start_date'],
 					$data[$this->alias]['time_zone'],
 					$frequency
