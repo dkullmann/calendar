@@ -6,7 +6,6 @@ class EventsController extends CalendarAppController {
  * Controller name
  *
  * @var string
- * @access public
  */
 	public $name = 'Events';
 
@@ -24,8 +23,13 @@ class EventsController extends CalendarAppController {
  */
 	public $components = array('RequestHandler');
 
-
+/**
+ * beforeFilter callback
+ *
+ * @return void
+ */
 	function beforeFilter() {
+		parent::beforeFilter();
 		if (isset($this->Auth)) {
 			$this->Auth->allow('index');
 		}
