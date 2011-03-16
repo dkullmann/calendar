@@ -6,7 +6,6 @@ class EventsController extends CalendarAppController {
  * Controller name
  *
  * @var string
- * @access public
  */
 	public $name = 'Events';
 
@@ -23,6 +22,18 @@ class EventsController extends CalendarAppController {
  * @var array
  */
 	public $components = array('RequestHandler');
+
+/**
+ * beforeFilter callback
+ *
+ * @return void
+ */
+	function beforeFilter() {
+		parent::beforeFilter();
+		if (isset($this->Auth)) {
+			$this->Auth->allow('index');
+		}
+	}
 
 /**
  * Index for event.
@@ -79,12 +90,18 @@ class EventsController extends CalendarAppController {
  * @param string $calendarId, Calendar id 
  * @access public
  */
-	public function add($calendarId) {
+	public function add($calendarId, $frequency = null) {
 		try {
-			$result = $this->Event->add($calendarId, $this->data);
+			if ($this->Event->Calendar->field('user_id', array('Calendar.id' => $calendarId)) != $this->Auth->user('id')) {
+				$this->redirect('/');
+			}
+			$result = $this->Event->add($calendarId, $this->data, $frequency);
 			if ($result === true) {
 				$this->Session->setFlash(__('The event has been saved', true));
-				$this->redirect(array('controller' => 'calendars', 'action' => 'view', $calendarId));
+				if ($this->RequestHandler->prefers('json')) {
+					$this->set('event', $this->Event->read());
+				}
+				$this->redirect(array('controller' => 'calendars', 'action' => 'view', $calendarId));				
 			}
 		} catch (OutOfBoundsException $e) {
 			$this->Session->setFlash($e->getMessage());
@@ -101,9 +118,9 @@ class EventsController extends CalendarAppController {
  * @param string $id, event id 
  * @access public
  */
-	public function edit($id = null) {
+	public function edit($id = null, $frequency = null) {
 		try {
-			$result = $this->Event->edit($id, $this->data);
+			$result = $this->Event->edit($id, $this->Auth->user('id'), $this->data, $frequency);
 			if ($result === true) {
 				$calendarId = $this->Event->data['Event']['calendar_id'];
 				$this->Session->setFlash(__('Event saved', true));
@@ -116,8 +133,6 @@ class EventsController extends CalendarAppController {
 			$this->Session->setFlash($e->getMessage());
 			$this->redirect('/');
 		}
-		$calendars = $this->Event->Calendar->find('list');
-		$this->set(compact('calendars'));
 		$this->set(compact('calendarId')); 
 	}
 
@@ -131,8 +146,11 @@ class EventsController extends CalendarAppController {
 		try {
 			$event = $this->Event->view($id);
 			$calendarId = $event['Event']['calendar_id'];			
-			$this->set(compact('calendarId')); 
-			$result = $this->Event->validateAndDelete($id, $this->data);
+			$this->set(compact('calendarId'));
+			if ($this->RequestHandler->isDelete()) {
+				$this->data[$this->Event->alias]['confirm'] = '1';
+			}
+			$result = $this->Event->validateAndDelete($id, $this->Auth->user('id'), $this->data);
 			if ($result === true) {
 				$this->Session->setFlash(__('Event deleted', true));
 				$this->redirect(array('action' => 'index', $calendarId));

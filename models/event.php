@@ -90,9 +90,16 @@ class Event extends CalendarAppModel {
  * @return array
  * @access public
  */
-	public function add($calendarId = null, $data = null) {
+	public function add($calendarId = null, $data = null, $frequency = null) {
 		if (!empty($data)) {
 			$data[$this->alias]['calendar_id'] = $calendarId;
+			if (!empty($frequency) && !empty($data[$this->alias]['start_date'])) {
+				$data['RecurrenceRule'] = $this->buildRerurrenceByFrequency(
+					$data[$this->alias]['start_date'],
+					$data[$this->alias]['time_zone'],
+					$frequency
+				);
+			}
 			if (!empty($data['RecurrenceRule'])) {
 			    $data[$this->alias]['recurring'] = true;
 			}
@@ -111,16 +118,22 @@ class Event extends CalendarAppModel {
  * Edits an existing Event.
  *
  * @param string $id, event id 
+ * @param string $user, event owner id
  * @param array $data, controller post data usually $this->data
+ * @param string $frequency, if set it will be taken as the default recurrence frequency for the event
+ * deleting all existing recurrence rules on database for the event
  * @return mixed True on successfully save else post data as array
  * @throws OutOfBoundsException If the element does not exists
  * @access public
  */
-	public function edit($id = null, $data = null) {
+	public function edit($id = null, $user = null, $data = null, $frequency = null) {
 		$event = $this->find('first', array(
 			'conditions' => array(
 				"{$this->alias}.{$this->primaryKey}" => $id,
-				)));
+				"Calendar.user_id" => $user,
+			),
+			'contain' => array('Calendar')
+		));
 
 		if (empty($event)) {
 			throw new OutOfBoundsException(__('Invalid Event', true));
@@ -129,9 +142,18 @@ class Event extends CalendarAppModel {
 
 		if (!empty($data)) {
 			$this->set($data);
-			$result = $this->save(null, true);
+
+			if ($frequency) {
+				$this->RecurrenceRule->deleteAll(array('event_id' => $id));
+				$this->data['RecurrenceRule'] = $this->buildRerurrenceByFrequency(
+					$this->data[$this->alias]['start_date'],
+					$this->data[$this->alias]['time_zone'],
+					$frequency
+				);
+			}
+
+			$result = $this->saveAll($this->data);
 			if ($result) {
-				$this->data = $result;
 				return true;
 			} else {
 				return $data;
@@ -141,6 +163,19 @@ class Event extends CalendarAppModel {
 		}
 	}
 
+	protected function buildRerurrenceByFrequency($date, $timeZone, $frequency) {
+		$startDate = new CalendarDate(
+			$date,
+			new DateTimeZone($timeZone)
+		);
+		$startDate->setTimeZone(new DateTimeZone('UTC'));
+		$dayOfWeek = strtolower($startDate->format('l'));
+
+		return array(array(
+			'frequency' => $frequency,
+			'bydaydays' => array($dayOfWeek)
+		));
+	}
 /**
  * Returns the record of a Event.
  *
@@ -170,11 +205,14 @@ class Event extends CalendarAppModel {
  * @throws OutOfBoundsException If the element does not exists
  * @access public
  */
-	public function validateAndDelete($id = null, $data = array()) {
+	public function validateAndDelete($id = null, $user, $data = array()) {
 		$event = $this->find('first', array(
 			'conditions' => array(
 				"{$this->alias}.{$this->primaryKey}" => $id,
-				)));
+				'Calendar.user_id' => $user
+			),
+			'contain' => array('Calendar')
+		));
 
 		if (empty($event)) {
 			throw new OutOfBoundsException(__('Invalid Event', true));
@@ -212,28 +250,19 @@ class Event extends CalendarAppModel {
 
 		$rendered_event = $event;
 
-		$user_tz = new DateTimeZone($event[$this->alias]['time_zone']);
-
 		$start_date = new CalendarDate($event[$this->alias]['start_date']);
 		$end_date   = new CalendarDate($event[$this->alias]['end_date']);
-
 		$interval = $start_date->diff($end_date);
 		$interval = new DateInterval("PT{$interval->h}H{$interval->i}M");
 
-		$start_date->setTimezone($user_tz);
-
 		$floating_start_hour = $start_date->format('H');
-
-		$date->setTimezone($user_tz);
 		$date->setTime($floating_start_hour, $date->format('i'), $date->format('s'));
-		$date->setTimezone($this->utc_tz);
 		$event[$this->alias]['start_date'] = $date->format();
 
 		$date->add($interval);
 		$event[$this->alias]['end_date'] = $date->format();
 
 		return $event;
-
 	}
 
 /**
@@ -245,11 +274,15 @@ class Event extends CalendarAppModel {
  * @link http://book.cakephp.org/view/1048/Callback-Methods#beforeSave-1052
  */
 	public function beforeSave($options = array()) {
-		$user_tz = new DateTimeZone($this->data[$this->alias]['time_zone']);
-
-		$this->data[$this->alias]['start_date'] = CalendarDate::convertToUTC($this->data[$this->alias]['start_date'], $user_tz);
-		$this->data[$this->alias]['end_date']   = CalendarDate::convertToUTC($this->data[$this->alias]['end_date'], $user_tz);
-
+		if (
+			!empty($this->data[$this->alias]['time_zone']) &&
+			!empty($this->data[$this->alias]['start_date']) &&
+			!empty($this->data[$this->alias]['end_date'])
+		) {
+			$user_tz = new DateTimeZone($this->data[$this->alias]['time_zone']);
+			$this->data[$this->alias]['start_date'] = CalendarDate::convertToUTC($this->data[$this->alias]['start_date'], $user_tz);
+			$this->data[$this->alias]['end_date']   = CalendarDate::convertToUTC($this->data[$this->alias]['end_date'], $user_tz);
+		}
 		return true;
 	}
 
@@ -270,8 +303,8 @@ class Event extends CalendarAppModel {
 
 			$query['conditions']['OR'] = array(
 					"AND" => array (
-						$this->alias . ".end_date >" => $query['conditions']['start_date'],
-						$this->alias . ".start_date <" => $query['conditions']['end_date'],
+						$this->alias . ".end_date >=" => $query['conditions']['start_date'],
+						$this->alias . ".start_date <=" => $query['conditions']['end_date'],
 					),
 					"Event.recurring" => true,
 				);

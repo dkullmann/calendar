@@ -27,6 +27,8 @@ class CalendarDateTest extends CakeTestCase {
 
 /**
  * Test conversion of timezones
+ *
+ * @return void
  */
 	public function testConvert() {
 		$result = CalendarDate::convertTimeZone('1985-04-12 20:00:00', 'Europe/Berlin', 'America/New_York');
@@ -40,12 +42,43 @@ class CalendarDateTest extends CakeTestCase {
 		$this->assertEqual($result, '1985-04-12 22:00:00');
 	}
 
+/**
+ * Test conversion of timezones
+ *
+ * @return void
+ */
 	public function testGetOffset() {
 		$result = CalendarDate::getTimeZoneOffset('Europe/Berlin', '2011-02-02T15:05:46');
 		$this->assertEqual($result, '+01:00');
 
 		$result = CalendarDate::getTimeZoneOffset('Europe/Berlin', '2011-02-02 15:05:46');
 		$this->assertEqual($result, '+01:00');
+	}
+
+/**
+ * Test conversion of timezones
+ *
+ * @return void
+ */
+	public function testSetOffset() {
+		$CalendarDate = new CalendarDate('2011-01-01 12:00:00', 'Europe/Berlin');
+		$CalendarDate->setOffset(-5);
+		$this->assertEqual($CalendarDate->format('Y-m-d H:i:s'), '2011-01-01 07:00:00');
+
+		$CalendarDate->setOffset(+10);
+		$this->assertEqual($CalendarDate->format('Y-m-d H:i:s'), '2011-01-01 17:00:00');
+
+		$CalendarDate->setOffset(+05);
+		$this->assertEqual($CalendarDate->format('Y-m-d H:i:s'), '2011-01-01 22:00:00');
+
+		$CalendarDate->setOffset(-10);
+		$this->assertEqual($CalendarDate->format('Y-m-d H:i:s'), '2011-01-01 12:00:00');
+
+		$CalendarDate->setOffset('-10:00');
+		$this->assertEqual($CalendarDate->format('Y-m-d H:i:s'), '2011-01-01 02:00:00');
+
+		$CalendarDate->setOffset('05:00');
+		$this->assertEqual($CalendarDate->format('Y-m-d H:i:s'), '2011-01-01 07:00:00');
 	}
 
 /**

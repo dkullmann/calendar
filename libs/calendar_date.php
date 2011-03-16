@@ -28,9 +28,14 @@ class CalendarDate extends DateTime {
  * @see DateTime::__construct()
  */
 	public function __construct($time = 'now', $timezone = null) {
-		if (!$timezone) {
+		if (is_string($timezone)) {
+			$timezone = new DateTimeZone($timezone);
+		}
+
+		if (empty($timezone)) {
 			$timezone = new DateTimeZone('UTC');
 		}
+
 		parent::__construct($time, $timezone);
 	}
 
@@ -48,7 +53,12 @@ class CalendarDate extends DateTime {
 	}
 
 /**
- * 
+ * Formats a date
+ *
+ * @param 
+ * @param 
+ * @param 
+ * @return string
  */
 	static public function formatDate($time, $format, $timezone) {
 		$DateTime = new DateTime($time, new DateTimeZone($timezone));
@@ -100,7 +110,6 @@ class CalendarDate extends DateTime {
  * @access public
  */	
 	public static function convertToUTC($date, $timeZone, $format = null) {
-
 		if(!is_a($timeZone, 'DateTimeZone')) {
 			$timeZone = new DateTimeZone($timeZone);
 		}
@@ -125,7 +134,6 @@ class CalendarDate extends DateTime {
  * @access public
  */	
 	public function convertFromUTC($date, $timeZone, $format = null) {
-
 		if(!is_a($timeZone, 'DateTimeZone')) {
 			$timeZone = new DateTimeZone($timeZone);
 		}

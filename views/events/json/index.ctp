@@ -19,6 +19,7 @@ foreach($events as $event) {
 	$json_event['start']	= $start->toAtom();
 	$json_event['end']		= $end->toAtom();
 	$json_event['url']      = $this->Html->url(array('action' => 'view', $event['Event']['id']));
+	$json_event['type']     = $event['Event']['type'];
 
 	/* Other available attributes for fullCalendar.js */
 	#$event['allDay']	= false;
