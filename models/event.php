@@ -249,7 +249,6 @@ class Event extends CalendarAppModel {
 	public function renderEventForDate($event, $date) {
 
 		$rendered_event = $event;
-
 		$start_date = new CalendarDate($event[$this->alias]['start_date']);
 		$end_date   = new CalendarDate($event[$this->alias]['end_date']);
 		$interval = $start_date->diff($end_date);

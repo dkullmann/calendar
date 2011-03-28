@@ -6,7 +6,7 @@ foreach($events as $event) {
 
 	/* Could set defaults here */
 	$json_event = array();
-	
+
 	$start = new CalendarDate($event['Event']['start_date']);
 	$end   = new CalendarDate($event['Event']['end_date']);
 

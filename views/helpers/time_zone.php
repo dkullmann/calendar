@@ -21,26 +21,6 @@ class TimeZoneHelper extends AppHelper {
  */
 	public $helpers = array('Form', 'Time');
 
-/** 
- * Options 
- *
- * @var array 
- */ 
-	private $__options = array('path' => 'autoload'); 
-
-/**
- * Time Zones
- *
- * @var array
- */
-	protected $_timeZones = array();
-
-/**
- * Countries
- *
- * @var array
- */
-	protected $_countries = array();
 
 /**
  * Constructor
@@ -49,16 +29,11 @@ class TimeZoneHelper extends AppHelper {
  */
 	public function __construct($options = array()) {
 		$defaults = array(
-			'timeZones' => array('cst', 'est', 'mst', 'pst', 'akst', 'hst'),
-			'countries' => array('America', 'Pacific', 'Europe', 'Australia', 'Asia'),
 			'appTimeZone' => Configure::read('App.defaultTimezone'),
 			'userTimeZone' => Configure::read('App.User.timeZone'),
 		);
 		parent::__construct($options);
 		$this->__options = array_merge($defaults, $options); 
-
-		$this->setTimeZones($this->__options['timeZones']);
-		$this->setCountries($this->__options['countries']);
 	}
 
 /**
@@ -76,7 +51,6 @@ class TimeZoneHelper extends AppHelper {
 			if (is_array($val)) {
 				foreach ($val as $a => $b) {
 					$name = $b['name'];
-					$k = $key;
 					$vname = str_replace('_', ' ', end(explode('/', $name)));
 					$offset = $b['offset'];
 					$voffset = $offset / 3600;
@@ -90,8 +64,8 @@ class TimeZoneHelper extends AppHelper {
 					if ($voffset >= 0) {
 						$voffset = '+' . $voffset;
 					}
-					$display = sprintf('(GMT %s:%s) %s', $voffset, $vminutes, $vname);
-					$arr[$k][] = array(
+					$display = sprintf("%s - %s (GMT %s:%s)", $vname, $key, $voffset, $vminutes);
+					$arr[] = array(
 						'name' => $display,
 						'value' => $name,
 						'utc_offset' => $b['offset'],
@@ -100,16 +74,9 @@ class TimeZoneHelper extends AppHelper {
 			}
 		}
 
-		foreach ($arr as $continent => &$zones) {
-			uasort($zones, function($a, $b) {
-				$aSign = $a['name'][5];
-				$bSign = $b['name'][5];
-				if ($aSign != $bSign) {
-					return ($aSign === '-') ? -1 : 1;
-				}
-				return strcmp($a['name'], $b['name']);
-			});
-		}
+		uasort($arr, function($a, $b) {
+			return strcmp($a['name'], $b['name']);
+		});
 
 		return $arr;
 	}
@@ -140,28 +107,6 @@ class TimeZoneHelper extends AppHelper {
 	}
 
 /**
- * This function takes an array of the old style of time zone
- * abreviations. e.g. CST, EST, PST
- *
- * @param array;
- * @return none; sets $this->_timeZones variable
- */
-	public function setTimeZones (array $array) {
-		$this->_timeZones = $array;
-	}
-
-/**
- * This function takes an array of the continent names for which
- * you want to get the valid time zone names for
- *
- * @param array;
- * @return none; sets $this->_countries variable
- */
-	public function setCountries (array $countries) {
-		$this->_countries = $countries;
-	}
-
-/**
  * This function is similiar to the dateTime::listabbreviations method
  * but this one weeds out those time zones that are not recognized.
  *
@@ -171,24 +116,16 @@ class TimeZoneHelper extends AppHelper {
 	public function getTimeZones() {
 		$ident = DateTimeZone::listIdentifiers();
 		$cntIdent = count($ident);
-		$zones = $this->_timeZones;
-		$cntZones = count($zones);
 
-		for ($i = 0; $i < $cntZones; $i++ ) {
-			for ($j = 0; $j < $cntIdent; $j++) {
-				$date = new DateTime(null, new DateTimeZone($ident[$j]));
-				$zoneFormat = $date->format('T');
-				$tz = $date->getTimezone();
-				$tzName = $tz->getName();
-				$offset = $date->getOffset();
+		for ($j = 0; $j < $cntIdent; $j++) {
+			$date = new DateTime(null, new DateTimeZone($ident[$j]));
+			$zoneFormat = $date->format('T');
+			$tz = $date->getTimezone();
+			$tzName = $tz->getName();
+			$offset = $date->getOffset();
 
-				$ex = explode('/', $tzName);
-				for ( $z = 0; $z < count($this->_countries); $z++) {
-					if ($ex[0] == ucwords($this->_countries[$z])) {
-						$array[$ex[0]][$j] = array('name' => $tzName, 'offset' => $offset, 'format' => $zoneFormat);
-					}
-				}
-			}
+			$ex = explode('/', $tzName);
+			$array[$ex[0]][$j] = array('name' => $tzName, 'offset' => $offset, 'format' => $zoneFormat);
 		}
 		return $this->__format($array);
 	}
@@ -198,21 +135,14 @@ class TimeZoneHelper extends AppHelper {
  *
  * @param string $fieldname Name of the field
  * @param array $options Classic FormHelper::input options extended with:
- *	- auto: if true all existing world timezones will be loaded, otherwise default values will be used
  *	- utc_offset: if true the UTC offset will be added in an "utc_offset" html attribute for each option
  * @return string Html markup for the dropdown
  */
 	public function select($fieldname, $options = array()) {
 		$options = array_merge(
-			array('auto' => false, 'utc_offset' => false),
+			array('utc_offset' => false),
 			$options);
-		$default = array(
-			'America/Los_Angeles' => 'PST',
-			'America/Chicago' => 'CST',
-			'America/New_York' => 'EST',
-			'America/Phoenix' => 'MST'
-		);
-		$set = !empty($options['auto']) ? $this->getTimezones() : $default;
+		$set = $this->getTimezones();
 
 		if ($options['utc_offset']) {
 			$newSet = array();
@@ -226,10 +156,14 @@ class TimeZoneHelper extends AppHelper {
 			}
 			$set = $newSet;
 		}
-
-		$set = array('' => 'Select your time zone') + $set;
 		unset($options['auto'], $options['utc_offset']);
-		return $this->Form->input($fieldname, array('type' => 'select', 'options' => $set, 'class' => 'time_zone_select') + $options);
+		return $this->Form->input($fieldname, array(
+			'empty' => 'Select your time zone',
+			'type' => 'select',
+			'options' => $set,
+			'class' => 'time_zone_select'
+			) + $options
+		);
 	}
 
 }
