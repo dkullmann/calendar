@@ -42,6 +42,12 @@ class EventsController extends CalendarAppController {
  * @access public
  */
 	public function index($calendarId = null, $viewType = null) {
+		if (!$calendarId) {
+			$calendarId = $this->Event->Calendar->find('list', array(
+				'conditions' => array('Calendar.user_id' => $this->Auth->user('id')),
+			));
+			$calendarId = ($calendarId) ? array_keys($calendarId) : false;
+		}
 		if ($calendarId) {
 			$this->paginate['conditions']['calendar_id'] = $calendarId;
 		}
