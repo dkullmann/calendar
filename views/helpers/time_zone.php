@@ -54,13 +54,12 @@ class TimeZoneHelper extends AppHelper {
 					$vname = str_replace('_', ' ', end(explode('/', $name)));
 					$offset = $b['offset'];
 					$voffset = $offset / 3600;
-					$mod = $offset % 3600;
-					if ($mod) {
-						$vminutes = abs($mod / 60);
-					} else {
-						$vminutes = '00';
+					$vminutes = 0;
+					if (strpos($voffset, '.')) {
+						list($voffset, $vminutes) = explode('.', $voffset);
 					}
-					$voffset = floor($voffset);
+					$vminutes *= 6;
+					$vminutes = str_pad($vminutes, 2, '0');
 					if ($voffset >= 0) {
 						$voffset = '+' . $voffset;
 					}
