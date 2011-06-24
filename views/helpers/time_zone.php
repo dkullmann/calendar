@@ -546,10 +546,15 @@ class TimeZoneHelper extends AppHelper {
 
 		$DateTime = new DateTime();
 		
+		$pattern = '/(\S+?)\s*\((.+?)\)/';
+		$replace = '$2 - $1';
+		
 		foreach ($this->timeZones as $timeZone => $description) {
 			$DateTimeZone = new DateTimeZone($timeZone);
 			$DateTime->setTimezone($DateTimeZone);
 			$gmtOffset = $DateTime->format('P');
+			
+			$description = preg_replace($pattern, $replace, $description);
 			
 			$options[$timeZone] = sprintf('(GMT %s) %s', $gmtOffset, $description);
 		}
