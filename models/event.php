@@ -144,6 +144,8 @@ class Event extends CalendarAppModel {
 					$this->data[$this->alias]['time_zone'],
 					$frequency
 				);
+				$this->data[$this->alias]['recurring'] = true;
+				$this->serializeRules();
 			}
 
 			$result = $this->saveAll($this->data);
