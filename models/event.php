@@ -26,9 +26,13 @@ class Event extends CalendarAppModel {
 		'Calendar' => array(
 			'className' => 'Calendar.Calendar',
 			'foreignKey' => 'calendar_id',
-			'conditions' => '',
-			'fields' => '',
-			'order' => ''
+		)
+	);
+
+	public $actsAs = array(
+		'Calendar.RRule',
+		'LocalizeTime.LocalizeTime' => array(
+			'fields' => array('start_date', 'end_date')
 		)
 	);
 
@@ -44,19 +48,6 @@ class Event extends CalendarAppModel {
 			'className' => 'Calendar.Attendee',
 			'foreignKey' => 'event_id',
 			'dependent' => true
-		),
-		'RecurrenceRule' => array(
-			'className' => 'Calendar.RecurrenceRule',
-			'foreignKey' => 'event_id',
-			'dependent' => true,
-			'conditions' => '',
-			'fields' => '',
-			'order' => '',
-			'limit' => '',
-			'offset' => '',
-			'exclusive' => '',
-			'finderQuery' => '',
-			'counterQuery' => ''
 		)
 	);
 
@@ -94,17 +85,20 @@ class Event extends CalendarAppModel {
 		if (!empty($data)) {
 			$data[$this->alias]['calendar_id'] = $calendarId;
 			if (!empty($frequency) && !empty($data[$this->alias]['start_date'])) {
-				$data['RecurrenceRule'] = $this->buildRerurrenceByFrequency(
+				$data['RRule'] = $this->buildRerurrenceByFrequency(
 					$data[$this->alias]['start_date'],
 					$data[$this->alias]['time_zone'],
 					$frequency
 				);
 			}
-			if (!empty($data['RecurrenceRule'])) {
+			if (!empty($data['RRule'])) {
 			    $data[$this->alias]['recurring'] = true;
 			}
+
 			$this->create();
-			$result = $this->saveAll($data);
+			$this->set($data);
+			$this->serializeRules();
+			$result = $this->saveAll($this->data);
 			if ($result !== false) {
 				return true;
 			} else {
@@ -144,8 +138,8 @@ class Event extends CalendarAppModel {
 			$this->set($data);
 
 			if ($frequency) {
-				$this->RecurrenceRule->deleteAll(array('event_id' => $id));
-				$this->data['RecurrenceRule'] = $this->buildRerurrenceByFrequency(
+				$this->RRule->deleteAll(array('event_id' => $id));
+				$this->data['RRule'] = $this->buildRerurrenceByFrequency(
 					$this->data[$this->alias]['start_date'],
 					$this->data[$this->alias]['time_zone'],
 					$frequency
@@ -163,19 +157,6 @@ class Event extends CalendarAppModel {
 		}
 	}
 
-	protected function buildRerurrenceByFrequency($date, $timeZone, $frequency) {
-		$startDate = new CalendarDate(
-			$date,
-			new DateTimeZone($timeZone)
-		);
-		$startDate->setTimeZone(new DateTimeZone('UTC'));
-		$dayOfWeek = strtolower($startDate->format('l'));
-
-		return array(array(
-			'frequency' => $frequency,
-			'bydaydays' => array($dayOfWeek)
-		));
-	}
 /**
  * Returns the record of a Event.
  *
@@ -238,33 +219,6 @@ class Event extends CalendarAppModel {
 	}
 
 /**
- * Renders a recurring event for the given date. Does not check to make sure the
- * event occurs on this date (use RecurrenceRule::ruleIsTrue for that).
- *
- * @param array $event Contains data formatted the same as a retrieved Event from a find.
- * @param DateTime $date A DateTime object in UTC time. This is the date to render the event for.
- * @return array The instance rendered for this recurring event
- * @access public
- */
-	public function renderEventForDate($event, $date) {
-
-		$rendered_event = $event;
-		$start_date = new CalendarDate($event[$this->alias]['start_date']);
-		$end_date   = new CalendarDate($event[$this->alias]['end_date']);
-		$interval = $start_date->diff($end_date);
-		$interval = new DateInterval("PT{$interval->h}H{$interval->i}M");
-
-		$floating_start_hour = $start_date->format('H');
-		$date->setTime($floating_start_hour, $date->format('i'), $date->format('s'));
-		$event[$this->alias]['start_date'] = $date->format();
-
-		$date->add($interval);
-		$event[$this->alias]['end_date'] = $date->format();
-
-		return $event;
-	}
-
-/**
  * Called before each save operation, after validation. Return a non-true result
  * to halt the save. Converts times to UTC before saving them in the database.
  *
@@ -273,46 +227,17 @@ class Event extends CalendarAppModel {
  * @link http://book.cakephp.org/view/1048/Callback-Methods#beforeSave-1052
  */
 	public function beforeSave($options = array()) {
-		if (
-			!empty($this->data[$this->alias]['time_zone']) &&
-			!empty($this->data[$this->alias]['start_date']) &&
-			!empty($this->data[$this->alias]['end_date'])
-		) {
-			$user_tz = new DateTimeZone($this->data[$this->alias]['time_zone']);
-			$this->data[$this->alias]['start_date'] = CalendarDate::convertToUTC($this->data[$this->alias]['start_date'], $user_tz);
-			$this->data[$this->alias]['end_date']   = CalendarDate::convertToUTC($this->data[$this->alias]['end_date'], $user_tz);
-		}
+		// All of this is done by LocalizeTime.LocalizeTime now
+		// if (
+		// 	!empty($this->data[$this->alias]['time_zone']) &&
+		// 	!empty($this->data[$this->alias]['start_date']) &&
+		// 	!empty($this->data[$this->alias]['end_date'])
+		// ) {
+		// 	$user_tz = new DateTimeZone($this->data[$this->alias]['time_zone']);
+		// 	$this->data[$this->alias]['start_date'] = CalendarDate::convertToUTC($this->data[$this->alias]['start_date'], $user_tz);
+		// 	$this->data[$this->alias]['end_date']   = CalendarDate::convertToUTC($this->data[$this->alias]['end_date'], $user_tz);
+		// }
 		return true;
-	}
-
-/**
- * beforeFind() saves the start and end time given to the find operation
- * so that recurring events can be calculated in afterFind
- *
- * @param mixed $query Query data based in from find method
- * @return mixed $query Query data
- * @access public
- */
-
- 	/* TODO: We should make a $query parameter 'recurring' to use here */
-	public function beforeFind($query) {
-		if(!empty($query['conditions']['start_date']) && !empty($query['conditions']['end_date'])) {
-			$this->_recurrenceStart = $query['conditions']['start_date'];
-			$this->_recurrenceEnd = $query['conditions']['end_date'];
-
-			$query['conditions']['OR'] = array(
-					"AND" => array (
-						$this->alias . ".end_date >=" => $query['conditions']['start_date'],
-						$this->alias . ".start_date <=" => $query['conditions']['end_date'],
-					),
-					"Event.recurring" => true,
-				);
-
-			unset($query['conditions']['start_date']);
-			unset($query['conditions']['end_date']);
-		}
-
-		return $query;
 	}
 
 /**
@@ -323,36 +248,40 @@ class Event extends CalendarAppModel {
  * @return array Modified results set
  * @access public
  */
-
  	/* TODO: There may be more logic required if we are not the primary model. */
 	public function afterFind($results, $primary) {
-		if ($this->findQueryType == 'count' || empty($this->_recurrenceStart) || empty($this->_recurrenceEnd)) {
+		if ($this->findQueryType == 'count') {
 		    return $results;
 		}
-		$events = $this->calculateRecurrence($results);
-		return parent::afterFind($events, $primary);
+
+		$results = $this->_calculateRecurrence($results, $primary);
+		$results = $this->_calculateAvailability($results, $primary);
+		$results = $this->_doLocalizeTimeAfterFind($results, $primary);
+		return parent::afterFind($results, $primary);
 	}
-
-	public function calculateRecurrence($results) {
-		$events = array();
-		foreach ($results as $event) {
-			if (isset($event['RecurrenceRule']) && count($event['RecurrenceRule']) > 0) {
-
-				$oneDay = new DateInterval('P1D');
-				$end_day = new CalendarDate($this->_recurrenceEnd);
-
-				for ($date = new CalendarDate($this->_recurrenceStart); $date <= $end_day; $date->add($oneDay)) {
-					foreach ($event['RecurrenceRule'] as $rule) {
-						if ($this->RecurrenceRule->ruleIsTrue($rule, $date)) {
-							$events[] = $this->renderEventForDate($event, clone $date);
-						}
-					}
-				}
-			} else {
-				$events[] = $event;
-			}
+	
+	protected function _calculateRecurrence($results, $primary) {
+		if (!$this->Behaviors->attached('RRule')) {
+			return $results;
+		} else {
+			return $this->calculateRecurrence($results, $primary);
 		}
-        $this->_recurrenceStart = $this->_recurrenceEnd = null;
-		return $events;
 	}
+	
+	protected function _calculateAvailability($results, $primary) {
+		if (!$this->Behaviors->attached('AvailabilityCalculator')) {
+			return $results;
+		} else {
+			return $this->calculateAvailability($results, $primary);
+		}
+	}
+	
+	protected function _doLocalizeTimeAfterFind($results, $primary) {
+		if (!$this->Behaviors->attached('LocalizeTime')) {
+			return $results;
+		} else {
+			return $this->doLocalizeTimeAfterFind($results, $primary);
+		}
+	}
+
 }

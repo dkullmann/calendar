@@ -51,21 +51,16 @@ class EventsController extends CalendarAppController {
 		if ($calendarId) {
 			$this->paginate['conditions']['calendar_id'] = $calendarId;
 		}
-		$offset = 0;
-		if (!empty($this->params['url']['browserOffset'])) {
-			$this->set('browserOffset', $this->params['url']['browserOffset']);
-			$offset = $this->params['url']['browserOffset']; 
-		}
 
-		if (!empty($this->params['url']['start'])) {
-			$this->paginate['conditions']['start_date'] = CalendarDate::unixToDate($this->params['url']['start'], $offset);
+		if (!empty($this->params['url']['start'])) { 
+			$this->paginate['recurs']['from'] = date('Y-m-d H:i:s', $this->params['url']['start']);
 		}
 
 		if (!empty($this->params['url']['end'])) {
-			$this->paginate['conditions']['end_date'] = CalendarDate::unixToDate($this->params['url']['end'], $offset);
+			$this->paginate['recurs']['to'] = date('Y-m-d H:i:s', $this->params['url']['end']);
 		}
+		$this->paginate['contain'][] = 'Calendar';
 
-		$this->paginate['contain'][] = 'RecurrenceRule';
 		$this->paginate['viewType'] = $viewType;
 		$this->set('events', $this->paginate());
 		$this->set(compact('calendarId')); 
