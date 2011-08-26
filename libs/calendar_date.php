@@ -46,10 +46,10 @@ class CalendarDate extends DateTime {
  * @param string date time string, default is now
  * @return string Offset like +01:00 or -04:00
  */
-	public static function getTimeZoneOffset($timeZone, $date = 'now') {
+	public static function getTimeZoneOffset($timeZone, $date = 'now', $format = 'P') {
 		$DateTime = new DateTime($date);
 		$DateTime->setTimeZone(new DateTimeZone($timeZone));
-		return $DateTime->format('P');
+		return $DateTime->format($format);
 	}
 
 /**
