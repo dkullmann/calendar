@@ -221,28 +221,6 @@ class Event extends CalendarAppModel {
 	}
 
 /**
- * Called before each save operation, after validation. Return a non-true result
- * to halt the save. Converts times to UTC before saving them in the database.
- *
- * @return boolean True if the operation should continue, false if it should abort
- * @access public
- * @link http://book.cakephp.org/view/1048/Callback-Methods#beforeSave-1052
- */
-	public function beforeSave($options = array()) {
-		// All of this is done by LocalizeTime.LocalizeTime now
-		// if (
-		// 	!empty($this->data[$this->alias]['time_zone']) &&
-		// 	!empty($this->data[$this->alias]['start_date']) &&
-		// 	!empty($this->data[$this->alias]['end_date'])
-		// ) {
-		// 	$user_tz = new DateTimeZone($this->data[$this->alias]['time_zone']);
-		// 	$this->data[$this->alias]['start_date'] = CalendarDate::convertToUTC($this->data[$this->alias]['start_date'], $user_tz);
-		// 	$this->data[$this->alias]['end_date']   = CalendarDate::convertToUTC($this->data[$this->alias]['end_date'], $user_tz);
-		// }
-		return true;
-	}
-
-/**
  * afterFind() creates recurring events from results set
  *
  * @param array $results The results from the find operation
