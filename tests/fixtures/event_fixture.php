@@ -1,55 +1,272 @@
 <?php
+/* Event Fixture generated on: 2011-08-19 16:08:10 : 1313771890 */
 class EventFixture extends CakeTestFixture {
-/**
- * Name
- *
- * @var string
- * @access public
- */
-	public $name = 'Event';
+	var $name = 'Event';
 
-/**
- * Fields
- *
- * @var array
- * @access public
- */
-	public $fields = array(
-		'id' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36, 'key' => 'primary', 'collate' => 'utf8_unicode_ci', 'charset' => 'utf8'),
-		'calendar_id' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36, 'key' => 'index', 'collate' => 'utf8_unicode_ci', 'charset' => 'utf8'),
-		'title' => array('type' => 'string', 'null' => false, 'default' => NULL, 'collate' => 'utf8_unicode_ci', 'charset' => 'utf8'),
+	var $fields = array(
+		'id' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36, 'key' => 'primary', 'collate' => 'latin1_swedish_ci', 'charset' => 'latin1'),
+		'calendar_id' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36, 'key' => 'index', 'collate' => 'latin1_swedish_ci', 'charset' => 'latin1'),
+		'title' => array('type' => 'string', 'null' => false, 'default' => NULL, 'collate' => 'latin1_swedish_ci', 'charset' => 'latin1'),
 		'start_date' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
 		'end_date' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
 		'recurring' => array('type' => 'boolean', 'null' => false, 'default' => '0'),
-		'time_zone' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 100, 'collate' => 'utf8_unicode_ci', 'charset' => 'utf8'),
-		'summary' => array('type' => 'string', 'null' => true, 'default' => NULL, 'collate' => 'utf8_unicode_ci', 'charset' => 'utf8'),
-		'type' => array('type' => 'string', 'null' => true, 'default' => NULL, 'lenght' => '30'),
+		'time_zone' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 100, 'collate' => 'latin1_swedish_ci', 'charset' => 'latin1'),
+		'summary' => array('type' => 'string', 'null' => true, 'default' => NULL, 'collate' => 'latin1_swedish_ci', 'charset' => 'latin1'),
 		'created' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
 		'modified' => array('type' => 'datetime', 'null' => false, 'default' => NULL),
+		'type' => array('type' => 'string', 'null' => true, 'default' => NULL, 'collate' => 'latin1_swedish_ci', 'charset' => 'latin1'),
 		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1), 'EVENTS_CALENDAR_FK' => array('column' => 'calendar_id', 'unique' => 0)),
-		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_unicode_ci', 'engine' => 'MyISAM')
+		'tableParameters' => array('charset' => 'latin1', 'collate' => 'latin1_swedish_ci', 'engine' => 'MyISAM')
 	);
 
-/**
- * Records
- *
- * @var array
- * @access public
- */
-	public $records = array(
+	var $records = array(
 		array(
-			'id' => '4d49a30a-3200-441d-b8a1-28502944ebe5',
-			'calendar_id' => 'Lorem ipsum dolor sit amet',
-			'title' => 'Lorem ipsum dolor sit amet',
-			'start_date' => '2011-02-02 14:01:38',
-			'end_date' => '2011-02-02 14:01:38',
+			'id' => '4e401104-d9e4-4f78-86a4-473cadcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Appointment',
+			'start_date' => '2011-08-10 20:00:00',
+			'end_date' => '2011-08-10 21:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Chicago',
+			'summary' => NULL,
+			'created' => '2011-08-08 16:38:28',
+			'modified' => '2011-08-08 16:38:41',
+			'type' => 'Appointment'
+		),
+		array(
+			'id' => '4e32dbc1-14a8-467b-a564-1b4badcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Unavailable',
+			'start_date' => '2011-07-27 19:00:00',
+			'end_date' => '2011-07-27 20:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-07-29 16:11:45',
+			'modified' => '2011-07-29 16:11:45',
+			'type' => 'AvailabilityException'
+		),
+		array(
+			'id' => '4e32dc29-c594-44e4-981a-198eadcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Available',
+			'start_date' => '2011-07-26 03:00:00',
+			'end_date' => '2011-07-26 04:00:00',
 			'recurring' => 1,
-			'time_zone' => 'Lorem ipsum dolor sit amet',
-			'summary' => 'Lorem ipsum dolor sit amet',
-			'type' => '',
-			'created' => '2011-02-02 14:01:38',
-			'modified' => '2011-02-02 14:01:38'
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-07-29 16:13:29',
+			'modified' => '2011-07-29 16:13:29',
+			'type' => 'Availability'
+		),
+		array(
+			'id' => '4e333039-2624-4eb8-9755-1b4aadcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Available',
+			'start_date' => '2011-08-05 17:00:00',
+			'end_date' => '2011-08-05 18:00:00',
+			'recurring' => 1,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-07-29 22:12:09',
+			'modified' => '2011-07-29 22:12:09',
+			'type' => 'Availability'
+		),
+		array(
+			'id' => '4e33302d-3f54-4bcb-a493-1bb1adcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Available',
+			'start_date' => '2011-08-02 21:00:00',
+			'end_date' => '2011-08-02 22:00:00',
+			'recurring' => 1,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-07-29 22:11:57',
+			'modified' => '2011-07-29 22:11:57',
+			'type' => 'Availability'
+		),
+		array(
+			'id' => '4e333036-e59c-4a77-b0e9-1ac5adcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Available',
+			'start_date' => '2011-08-03 19:00:00',
+			'end_date' => '2011-08-03 20:00:00',
+			'recurring' => 1,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-07-29 22:12:06',
+			'modified' => '2011-07-29 22:12:06',
+			'type' => 'Availability'
+		),
+		array(
+			'id' => '4e333045-87a8-48b2-a6f3-19bbadcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Available',
+			'start_date' => '2011-08-04 15:00:00',
+			'end_date' => '2011-08-04 16:00:00',
+			'recurring' => 1,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-07-29 22:12:21',
+			'modified' => '2011-07-29 22:12:21',
+			'type' => 'Availability'
+		),
+		array(
+			'id' => '4e333033-c1e0-4536-98cf-198dadcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Available',
+			'start_date' => '2011-07-31 21:00:00',
+			'end_date' => '2011-07-31 22:00:00',
+			'recurring' => 1,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-07-29 22:12:03',
+			'modified' => '2011-07-29 22:12:03',
+			'type' => 'Availability'
+		),
+		array(
+			'id' => '4e333049-1be8-4d12-9835-1bb1adcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Available',
+			'start_date' => '2011-08-06 18:00:00',
+			'end_date' => '2011-08-06 19:00:00',
+			'recurring' => 1,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-07-29 22:12:25',
+			'modified' => '2011-07-29 22:12:25',
+			'type' => 'Availability'
+		),
+		array(
+			'id' => '4e332f25-dcdc-4624-93ff-198dadcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Unavailable',
+			'start_date' => '2011-07-29 17:00:00',
+			'end_date' => '2011-07-29 18:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-07-29 22:07:33',
+			'modified' => '2011-07-29 22:07:33',
+			'type' => 'AvailabilityException'
+		),
+		array(
+			'id' => '4e36efd5-4818-46a7-aaa8-7f9eadcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Unavailable',
+			'start_date' => '2011-08-07 21:00:00',
+			'end_date' => '2011-08-07 22:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-08-01 18:26:29',
+			'modified' => '2011-08-01 18:26:29',
+			'type' => 'AvailabilityException'
+		),
+		array(
+			'id' => '4e36ef7c-0588-4e61-9b59-74b6adcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Unavailable',
+			'start_date' => '2011-08-06 18:00:00',
+			'end_date' => '2011-08-06 19:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-08-01 18:25:00',
+			'modified' => '2011-08-01 18:25:00',
+			'type' => 'AvailabilityException'
+		),
+		array(
+			'id' => '4e36ed31-8b94-47bc-a3e5-7f9eadcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Unavailable',
+			'start_date' => '2011-08-02 21:00:00',
+			'end_date' => '2011-08-02 22:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-08-01 18:15:13',
+			'modified' => '2011-08-01 18:15:13',
+			'type' => 'AvailabilityException'
+		),
+		array(
+			'id' => '4e36ef32-7dc4-4f2f-a7b0-7bffadcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Unavailable',
+			'start_date' => '2011-08-05 17:00:00',
+			'end_date' => '2011-08-05 18:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-08-01 18:23:46',
+			'modified' => '2011-08-01 18:23:46',
+			'type' => 'AvailabilityException'
+		),
+		array(
+			'id' => '4e36f0ab-cf74-46d8-b1aa-74b6adcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Unavailable',
+			'start_date' => '2011-08-12 17:00:00',
+			'end_date' => '2011-08-12 18:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-08-01 18:30:03',
+			'modified' => '2011-08-01 18:30:03',
+			'type' => 'AvailabilityException'
+		),
+		array(
+			'id' => '4e36f0c2-9d5c-4aa3-98c8-72a8adcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Unavailable',
+			'start_date' => '2011-08-13 18:00:00',
+			'end_date' => '2011-08-13 19:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-08-01 18:30:26',
+			'modified' => '2011-08-01 18:30:26',
+			'type' => 'AvailabilityException'
+		),
+		array(
+			'id' => '4e36f0ea-b6ec-4621-a49c-74f1adcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Unavailable',
+			'start_date' => '2011-08-14 21:00:00',
+			'end_date' => '2011-08-14 22:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-08-01 18:31:06',
+			'modified' => '2011-08-01 18:31:06',
+			'type' => 'AvailabilityException'
+		),
+		array(
+			'id' => '4e36f0f2-802c-46dc-9ec8-74f1adcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Unavailable',
+			'start_date' => '2011-08-16 03:00:00',
+			'end_date' => '2011-08-16 04:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-08-01 18:31:14',
+			'modified' => '2011-08-01 18:31:14',
+			'type' => 'AvailabilityException'
+		),
+		array(
+			'id' => '4e36f0f4-2d8c-482b-a7d1-74efadcb5c22',
+			'calendar_id' => '4d782017-a5b4-4fd3-9efb-682eadcb5c22',
+			'title' => 'Unavailable',
+			'start_date' => '2011-08-16 21:00:00',
+			'end_date' => '2011-08-16 22:00:00',
+			'recurring' => 0,
+			'time_zone' => 'America/Los_Angeles',
+			'summary' => NULL,
+			'created' => '2011-08-01 18:31:16',
+			'modified' => '2011-08-01 18:31:16',
+			'type' => 'AvailabilityException'
 		),
 	);
-
 }
+?>

@@ -9,9 +9,6 @@ foreach($events as $event) {
 
 	$start = new CalendarDate($event['Event']['start_date']);
 	$end   = new CalendarDate($event['Event']['end_date']);
-
-	$start->setOffset($browserOffset);
-	$end->setOffset($browserOffset);
 	
 	/* Event properties from http://arshaw.com/fullcalendar/docs/event_data/Event_Object/ */
 	$json_event['id']		= $event['Event']['id'];
