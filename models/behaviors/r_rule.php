@@ -2,11 +2,6 @@
 
 class RRuleBehavior extends ModelBehavior {
 	
-	
-	var $defaults = array(
-		'table' => 'recurrence_rules',
-	);
-	
 	public $modelName = 'RRule';
 	
 	protected $_start;
@@ -17,11 +12,8 @@ class RRuleBehavior extends ModelBehavior {
 		$this->defaults['foreignKey'] = sprintf('%s_id', Inflector::underscore($Model->alias));
 		$this->settings[$Model->alias] = am($this->defaults, $config);
 		
-		$RRule = new AppModel(array(
-			'table' => $this->settings[$Model->alias]['table'],
-			'name' => 'RRule'
-		));
-				
+		$RRule = ClassRegistry::init('Calendar.RRule');
+
 		$Model->bindModel(array(
 			'hasMany' => array(
 				$this->modelName => array(
