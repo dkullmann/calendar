@@ -147,7 +147,7 @@ class RRuleBehavior extends ModelBehavior {
 		$interval = new DateInterval("PT{$interval->h}H{$interval->i}M");
 
 		$floating_start_hour = $start_date->format('H');
-		$date->setTime($floating_start_hour, $date->format('i'), $date->format('s'));
+		$date->setTime($floating_start_hour, $start_date->format('i'), $start_date->format('s'));
 		$event[$Model->alias]['start_date'] = $date->format();
 
 		$date->add($interval);
