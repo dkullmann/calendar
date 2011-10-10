@@ -39,10 +39,15 @@ class RRuleBehavior extends ModelBehavior {
 	
 	// @todo - Add a sweet join to make this faster
 	function beforeFind(&$Model, $query) {
+		CakeLog::write('debug', print_r($query, 1));
 		if (!empty($query['recurs'])) {
 			$this->_start = $query['recurs']['from'];
 			$this->_end = $query['recurs']['to'];
-		} elseif (!empty($query['conditions']['start_date']) && !empty($query['conditions']['end_date'])) {
+		} elseif (
+			!empty($query['conditions']['start_date']) &&				# start_date
+			!empty($query['conditions']['end_date']) &&					# and end_date exist
+			!(isset($query['recurs']) && $query['recurs'] == false))	# and we didn't say "don't recur"
+		{
 			$this->_start = $query['conditions']['start_date'];
 			$this->_end = $query['conditions']['end_date'];
 			unset($query['conditions']['start_date']);
