@@ -55,13 +55,15 @@ class RRuleBehavior extends ModelBehavior {
 		}
 		if ($this->_start && $this->_end) {
 			$query['contain'][] = $this->modelName;
-			$query['conditions']['OR'] = array(
+			$query['conditions'][] = array(
+				'OR' => array(
 					'AND' => array (
 						$Model->alias . '.end_date >=' => $this->_start,
 						$Model->alias . '.start_date <=' => $this->_end,
 					),
 					$Model->alias.'.recurring' => true,
-				);			
+				)
+			);			
 		}
 		return $query;
 	}
